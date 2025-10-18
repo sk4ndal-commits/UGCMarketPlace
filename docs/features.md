@@ -12,7 +12,6 @@ access the platform’s features.
 - [ ] User can sign up via email/password.
 - [ ] User can log in and log out securely.
 - [ ] Password reset flow is implemented.
-- [ ] OAuth login (Google) is supported.
 - [ ] Role selection (Brand / Influencer) is required on first login.
 
 ### Example data/flows
