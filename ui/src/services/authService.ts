@@ -1,48 +1,5 @@
 import apiClient from './api';
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  password_confirm: string;
-  first_name?: string;
-  last_name?: string;
-  gdpr_consent: boolean;
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
-export interface User {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: 'BRAND' | 'INFLUENCER' | null;
-  is_email_verified: boolean;
-  gdpr_consent: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AuthResponse {
-  status: string;
-  data: {
-    user: User;
-    tokens: {
-      access: string;
-      refresh: string;
-    };
-  };
-  errors: any[];
-}
-
-export interface ApiResponse<T> {
-  status: string;
-  data: T;
-  errors: any[];
-}
+import type { RegisterData, LoginData, User, AuthResponse, ApiResponse } from '../models/auth';
 
 const authService = {
   /**

@@ -109,7 +109,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import campaignService, { type Application } from '../services/campaignService';
+import campaignService from '../services/campaignService';
+import type { Application } from '../models/campaign';
 
 const router = useRouter();
 

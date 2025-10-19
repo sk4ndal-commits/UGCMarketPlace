@@ -246,7 +246,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import applicationService, { type Template, type CreatorApplicationFormData } from '../services/applicationService';
+import applicationService from '../services/applicationService';
+import type { Template, CreatorApplicationFormData } from '../models/application';
 
 const router = useRouter();
 const route = useRoute();

@@ -171,7 +171,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
-import applicationService, { type CreatorApplication } from '../services/applicationService';
+import applicationService from '../services/applicationService';
+import type { CreatorApplication } from '../models/application';
 
 const router = useRouter();
 const route = useRoute();

@@ -1,87 +1,11 @@
 import apiClient from './api';
-
-export interface Campaign {
-  id?: number;
-  title: string;
-  description: string;
-  content_type: string;
-  content_type_display?: string;
-  category: string;
-  category_display?: string;
-  deliverables: string;
-  budget: string | number;
-  deadline: string;
-  status: string;
-  status_display?: string;
-  brand?: number;
-  brand_email?: string;
-  reference_files?: CampaignFile[];
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CampaignFile {
-  id: number;
-  file: string;
-  uploaded_at: string;
-}
-
-export interface CampaignResponse {
-  status: string;
-  data: Campaign | Campaign[];
-  errors: any[];
-}
-
-export interface CampaignFormData {
-  title: string;
-  description: string;
-  content_type: string;
-  category: string;
-  deliverables: string;
-  budget: string | number;
-  deadline: string;
-  status: string;
-  reference_files?: File[];
-}
-
-export interface CampaignFilters {
-  budget_min?: number;
-  budget_max?: number;
-  category?: string;
-  content_type?: string;
-  deadline_before?: string;
-}
-
-export interface Application {
-  id?: number;
-  campaign: number;
-  campaign_title?: string;
-  influencer?: number;
-  influencer_email?: string;
-  influencer_followers?: number;
-  influencer_engagement_rate?: string | number;
-  influencer_platform?: string;
-  pitch: string;
-  portfolio_link?: string;
-  proposed_price?: string | number;
-  status?: string;
-  status_display?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ApplicationFormData {
-  campaign: number;
-  pitch: string;
-  portfolio_link?: string;
-  proposed_price?: string | number;
-}
-
-export interface ApplicationResponse {
-  status: string;
-  data: Application | Application[];
-  errors: any[];
-}
+import type {
+  CampaignResponse,
+  CampaignFormData,
+  CampaignFilters,
+  ApplicationFormData,
+  ApplicationResponse,
+} from '../models/campaign';
 
 const campaignService = {
   /**

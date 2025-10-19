@@ -221,12 +221,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
-import campaignService, { type Campaign, type ApplicationFormData } from '../services/campaignService';
+import campaignService from '../services/campaignService';
+import type { Campaign, ApplicationFormData } from '../models/campaign';
 
 const route = useRoute();
-const router = useRouter();
 const authStore = useAuthStore();
 
 const campaign = ref<Campaign | null>(null);

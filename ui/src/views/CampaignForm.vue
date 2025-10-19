@@ -248,7 +248,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import campaignService, { type CampaignFormData } from '../services/campaignService';
+import campaignService from '../services/campaignService';
+import type { CampaignFormData } from '../models/campaign';
 
 const router = useRouter();
 const route = useRoute();

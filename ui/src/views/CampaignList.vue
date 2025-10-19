@@ -250,7 +250,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
-import campaignService, { type Campaign, type CampaignFilters } from '../services/campaignService';
+import campaignService from '../services/campaignService';
+import type { Campaign, CampaignFilters } from '../models/campaign';
 
 const router = useRouter();
 const authStore = useAuthStore();

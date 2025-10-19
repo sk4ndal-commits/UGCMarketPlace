@@ -117,7 +117,8 @@ const handleSubmit = async () => {
   const result = await authStore.confirmPasswordReset(
     uid,
     token,
-    formData.value.password
+    formData.value.password,
+    formData.value.confirmPassword
   );
   
   if (result) {
