@@ -26,7 +26,7 @@
               <div class="card-body">
                 <h3 class="card-title h5 fw-bold">Create Campaign</h3>
                 <p class="card-text text-muted small">Post a new UGC campaign and start receiving applications from creators.</p>
-                <button class="btn btn-primary btn-sm w-100" disabled>Coming Soon</button>
+                <button class="btn btn-primary btn-sm w-100" @click="router.push('/campaigns/create')">Create Campaign</button>
               </div>
             </div>
           </div>
@@ -36,7 +36,7 @@
               <div class="card-body">
                 <h3 class="card-title h5 fw-bold">My Campaigns</h3>
                 <p class="card-text text-muted small">View and manage your active and past campaigns.</p>
-                <button class="btn btn-secondary btn-sm w-100" disabled>Coming Soon</button>
+                <button class="btn btn-secondary btn-sm w-100" @click="router.push('/campaigns')">View Campaigns</button>
               </div>
             </div>
           </div>
