@@ -4,102 +4,7 @@
       <h2 class="text-2xl font-bold">Available Campaigns</h2>
     </div>
 
-    <!-- Filters for Influencers -->
-    <div class="bg-white rounded-lg shadow-sm p-5 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h5 class="text-lg font-semibold">
-          <span class="mr-2">🔍</span>Filter Campaigns
-        </h5>
-        <button
-          v-if="hasActiveFilters"
-          class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-          @click="clearFilters"
-        >
-          <span class="mr-1">✖</span>Clear Filters
-        </button>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Budget Range -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Budget Range</label>
-          <div class="flex items-center gap-2">
-            <div class="flex items-center border border-gray-300 rounded">
-              <span class="px-2 text-sm text-gray-600 bg-gray-50">€</span>
-              <input
-                v-model="filters.budget_min"
-                type="number"
-                class="w-20 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
-                placeholder="Min"
-                min="0"
-                step="1"
-              />
-            </div>
-            <span class="text-gray-500">-</span>
-            <div class="flex items-center border border-gray-300 rounded">
-              <span class="px-2 text-sm text-gray-600 bg-gray-50">€</span>
-              <input
-                v-model="filters.budget_max"
-                type="number"
-                class="w-20 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
-                placeholder="Max"
-                min="0"
-                step="1"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Category -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select v-model="filters.category" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">All Categories</option>
-            <option
-              v-for="category in categoryChoices"
-              :key="category.value"
-              :value="category.value"
-            >
-              {{ category.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Platform/Content Type -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Platform</label>
-          <select v-model="filters.content_type" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">All Platforms</option>
-            <option
-              v-for="contentType in contentTypeChoices"
-              :key="contentType.value"
-              :value="contentType.value"
-            >
-              {{ contentType.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Deadline -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Deadline Before</label>
-          <input
-            v-model="filters.deadline_before"
-            type="date"
-            class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div class="mt-4">
-        <button
-          class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity text-sm"
-          @click="applyFilters"
-        >
-          <span class="mr-1">🔍</span>Apply Filters
-        </button>
-      </div>
-    </div>
+    <CampaignFilters :filters="filters" :categoryChoices="categoryChoices" :contentTypeChoices="contentTypeChoices" :isBrand="false" @apply="loadCampaigns" @clear="clearFilters" />
 
     <!-- Loading/Error/Empty/Results handled like brand view but with isBrand=false -->
     <div v-if="loading" class="text-center py-12">
@@ -117,16 +22,8 @@
       <p class="text-gray-500 mb-4">Check back later for new opportunities.</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <CampaignCard
-        v-for="campaign in campaigns"
-        :key="campaign.id"
-        :campaign="campaign"
-        :isBrand="false"
-        @view="viewCampaign"
-        @edit="editCampaign"
-        @delete="confirmDelete"
-      />
+    <div v-else>
+      <CampaignCardsGrid :campaigns="campaigns" :isBrand="false" @view="viewCampaign" @edit="editCampaign" @delete="confirmDelete" />
     </div>
 
     <!-- Delete modal same as brand -->
@@ -173,11 +70,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import campaignService from '../../services/campaignService';
-import type { Campaign, CampaignFilters } from '../../models/campaign';
-import CampaignCard from '../shared/CampaignCard.vue';
+import type { Campaign, CampaignFilters as CampaignFiltersType } from '../../models/campaign';
+import CampaignFilters from '../shared/CampaignFilters.vue';
+import CampaignCardsGrid from '../shared/CampaignCardsGrid.vue';
 
 const router = useRouter();
 // authStore intentionally not used directly in script; kept for future role checks
@@ -191,7 +89,7 @@ const campaignToDelete = ref<Campaign | null>(null);
 const isDeleting = ref(false);
 
 // Filter state
-const filters = ref<CampaignFilters>({
+const filters = ref<CampaignFiltersType>({
   budget_min: undefined,
   budget_max: undefined,
   category: '',
@@ -206,7 +104,7 @@ const loadCampaigns = async (applyFilters = false) => {
   loading.value = true;
   errorMessage.value = '';
   try {
-    const filterParams: CampaignFilters = {};
+  const filterParams: CampaignFiltersType = {};
     if (applyFilters) {
       if (filters.value.budget_min) filterParams.budget_min = Number(filters.value.budget_min);
       if (filters.value.budget_max) filterParams.budget_max = Number(filters.value.budget_max);
@@ -224,19 +122,7 @@ const loadCampaigns = async (applyFilters = false) => {
   }
 };
 
-const hasActiveFilters = computed(() => {
-  return !!(
-    filters.value.budget_min ||
-    filters.value.budget_max ||
-    filters.value.category ||
-    filters.value.content_type ||
-    filters.value.deadline_before
-  );
-});
-
-const applyFilters = () => {
-  loadCampaigns(true);
-};
+// hasActiveFilters and applyFilters are handled inside CampaignFilters component now
 
 const clearFilters = () => {
   filters.value = {
@@ -282,18 +168,8 @@ onMounted(() => {
   loadCampaigns();
 });
 
-// No-op references to satisfy TypeScript usage checks when template usage isn't picked up
-// (template uses these symbols; referencing them here prevents TS6133 errors)
-void CampaignCard;
 void categoryChoices;
 void contentTypeChoices;
-void hasActiveFilters;
-void applyFilters;
-void clearFilters;
-void viewCampaign;
-void editCampaign;
-void confirmDelete;
-void deleteCampaign;
 </script>
 
 <style scoped>

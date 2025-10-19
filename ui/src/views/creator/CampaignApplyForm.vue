@@ -9,7 +9,15 @@
 
     <div v-else-if="alreadyApplied" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
       <p class="mb-2">You have already applied to this campaign.</p>
-      <button @click="$router.push('/my-applications')" class="text-blue-800 underline">View My Applications →</button>
+      <div class="flex items-center gap-3">
+        <button v-if="existingApplicationId" @click="$router.push(`/applications/${existingApplicationId}`)" class="text-blue-800 underline">View your application →</button>
+        <button v-else @click="$router.push('/my-applications')" class="text-blue-800 underline">View My Applications →</button>
+      </div>
+    </div>
+
+    <div v-else-if="isBrandOwner" class="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded mb-4">
+      <p class="mb-2">You are the owner of this campaign and cannot apply as a creator.</p>
+      <button @click="$router.push(`/campaigns/${props.campaignId}/edit`)" class="text-yellow-800 underline">Edit Campaign →</button>
     </div>
 
     <form v-else @submit.prevent="submitApplication">
@@ -42,18 +50,35 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { onMounted } from 'vue';
 import type { ApplicationFormData } from '../../models/campaign';
 import campaignService from '../../services/campaignService';
+import { useAuthStore } from '../../stores/authStore';
 
 const props = defineProps<{ campaignId: number }>();
+
+const authStore = useAuthStore();
 
 const form = ref<ApplicationFormData>({ campaign: props.campaignId, pitch: '', portfolio_link: '', proposed_price: undefined });
 const submitting = ref(false);
 const applicationSuccess = ref(false);
 const alreadyApplied = ref(false);
+const existingApplicationId = ref<number | null>(null);
+const isBrandOwner = ref(false);
 const applicationError = ref('');
 
 const submitApplication = async () => {
+  // Prevent submission if brand owner or already applied
+  if (isBrandOwner.value) {
+    applicationError.value = 'Brand owners cannot apply to their own campaign.';
+    return;
+  }
+
+  if (alreadyApplied.value) {
+    applicationError.value = 'You have already applied to this campaign.';
+    return;
+  }
+
   submitting.value = true;
   applicationError.value = '';
   try {
@@ -65,6 +90,36 @@ const submitApplication = async () => {
     submitting.value = false;
   }
 };
+
+onMounted(async () => {
+  // Fetch campaign to check owner/brand
+  try {
+    const resp = await campaignService.getCampaign(props.campaignId);
+    const campaign = resp.data as any;
+    // campaign may have a `brand` or `owner` field; try common names
+    const ownerId = (campaign.brand ?? campaign.owner ?? campaign.created_by ?? null) as number | null;
+    if (ownerId && authStore.user?.id === ownerId) {
+      isBrandOwner.value = true;
+      return; // brand owners shouldn't apply, no need to check further
+    }
+  } catch (err) {
+    // ignore — we will still try to fetch applications
+    console.warn('Failed to load campaign for apply-form checks', err);
+  }
+
+  // Fetch user's applications to see if already applied
+  try {
+    const appsResp = await campaignService.getApplications();
+    const apps = Array.isArray(appsResp.data) ? appsResp.data : [appsResp.data];
+    const existing = apps.find((a: any) => a.campaign === props.campaignId && a.creator === authStore.user?.id);
+    if (existing) {
+      alreadyApplied.value = true;
+      existingApplicationId.value = existing.id ?? null;
+    }
+  } catch (err) {
+    console.warn('Failed to load applications for apply-form checks', err);
+  }
+});
 </script>
 
 <style scoped></style>

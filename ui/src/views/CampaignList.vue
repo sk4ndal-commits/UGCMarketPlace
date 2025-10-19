@@ -11,102 +11,7 @@
       </button>
     </div>
 
-    <!-- Filters for Influencers -->
-    <div v-if="!isBrand" class="bg-white rounded-lg shadow-sm p-5 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h5 class="text-lg font-semibold">
-          <span class="mr-2">🔍</span>Filter Campaigns
-        </h5>
-        <button
-          v-if="hasActiveFilters"
-          class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-          @click="clearFilters"
-        >
-          <span class="mr-1">✖</span>Clear Filters
-        </button>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Budget Range -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Budget Range</label>
-          <div class="flex items-center gap-2">
-            <div class="flex items-center border border-gray-300 rounded">
-              <span class="px-2 text-sm text-gray-600 bg-gray-50">€</span>
-              <input
-                v-model="filters.budget_min"
-                type="number"
-                class="w-20 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
-                placeholder="Min"
-                min="0"
-                step="1"
-              />
-            </div>
-            <span class="text-gray-500">-</span>
-            <div class="flex items-center border border-gray-300 rounded">
-              <span class="px-2 text-sm text-gray-600 bg-gray-50">€</span>
-              <input
-                v-model="filters.budget_max"
-                type="number"
-                class="w-20 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
-                placeholder="Max"
-                min="0"
-                step="1"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Category -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select v-model="filters.category" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">All Categories</option>
-            <option
-              v-for="category in categoryChoices"
-              :key="category.value"
-              :value="category.value"
-            >
-              {{ category.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Platform/Content Type -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Platform</label>
-          <select v-model="filters.content_type" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">All Platforms</option>
-            <option
-              v-for="contentType in contentTypeChoices"
-              :key="contentType.value"
-              :value="contentType.value"
-            >
-              {{ contentType.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Deadline -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Deadline Before</label>
-          <input
-            v-model="filters.deadline_before"
-            type="date"
-            class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div class="mt-4">
-        <button
-          class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity text-sm"
-          @click="applyFilters"
-        >
-          <span class="mr-1">🔍</span>Apply Filters
-        </button>
-      </div>
-    </div>
+  <CampaignFilters :filters="filters" :categoryChoices="categoryChoices" :contentTypeChoices="contentTypeChoices" :isBrand="isBrand" @apply="onApplyFilters" @clear="clearFilters" />
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-12">
@@ -136,16 +41,8 @@
     </div>
 
     <!-- Campaigns List -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <CampaignCard
-        v-for="campaign in campaigns"
-        :key="campaign.id"
-        :campaign="campaign"
-        :isBrand="isBrand"
-        @view="viewCampaign"
-        @edit="editCampaign"
-        @delete="confirmDelete"
-      />
+    <div v-else>
+      <CampaignCardsGrid :campaigns="campaigns" :isBrand="isBrand" @view="viewCampaign" @edit="editCampaign" @delete="confirmDelete" />
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -197,7 +94,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import campaignService from '../services/campaignService';
 import type { Campaign, CampaignFilters } from '../models/campaign';
-import CampaignCard from './shared/CampaignCard.vue';
+import CampaignCardsGrid from './shared/CampaignCardsGrid.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -245,15 +142,12 @@ const loadCampaigns = async (applyFilters = false) => {
   }
 };
 
-const hasActiveFilters = computed(() => {
-  return !!(
-    filters.value.budget_min ||
-    filters.value.budget_max ||
-    filters.value.category ||
-    filters.value.content_type ||
-    filters.value.deadline_before
-  );
-});
+// hasActiveFilters is now handled inside CampaignFilters component
+
+const onApplyFilters = (f: typeof filters.value) => {
+  filters.value = f;
+  applyFilters();
+};
 
 const applyFilters = () => {
   loadCampaigns(true);

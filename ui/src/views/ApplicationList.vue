@@ -45,98 +45,21 @@
 
         <!-- Applications Grid -->
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
+          <ApplicationItem
             v-for="app in applications"
             :key="app.id"
-            class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition cursor-pointer"
-            @click="viewApplication(app.id!)"
-          >
-            <!-- Application Header -->
-            <div class="flex justify-between items-start mb-3">
-              <h4 class="text-lg font-semibold text-gray-800 flex-1">{{ app.name }}</h4>
-              <span
-                class="px-2 py-1 text-xs font-medium rounded"
-                :class="getVisibilityClass(app.visibility)"
-              >
-                {{ app.visibility }}
-              </span>
-            </div>
-
-            <!-- Application ID -->
-            <p class="text-xs text-gray-500 mb-2 font-mono">{{ app.application_id }}</p>
-
-            <!-- Description -->
-            <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ app.description }}</p>
-
-            <!-- Metadata -->
-            <div class="space-y-1 text-xs text-gray-500">
-              <div class="flex items-center">
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Owner: {{ app.owner }}</span>
-              </div>
-              <div v-if="app.template_details" class="flex items-center">
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-                <span>Template: {{ app.template_details?.name }}</span>
-              </div>
-              <div class="flex items-center">
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Created: {{ formatDate(app.created_at) }}</span>
-              </div>
-            </div>
-
-            <!-- Actions (for creators) -->
-            <div v-if="isCreator && app.creator === currentUserId" class="mt-4 flex gap-2">
-              <button
-                @click.stop="editApplication(app.id!)"
-                class="flex-1 px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
-                Edit
-              </button>
-              <button
-                @click.stop="confirmDelete(app.id!)"
-                class="flex-1 px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+            :app="app"
+            :isCreator="isCreator"
+            :currentUserId="currentUserId"
+            @view="viewApplication"
+            @edit="editApplication"
+            @deleted="onDeleted"
+          />
         </div>
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div
-      v-if="showDeleteModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="showDeleteModal = false"
-    >
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 class="text-lg font-semibold mb-3">Delete Application</h3>
-        <p class="text-gray-600 mb-6">
-          Are you sure you want to delete this application? This action cannot be undone.
-        </p>
-        <div class="flex gap-3 justify-end">
-          <button
-            @click="showDeleteModal = false"
-            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition"
-          >
-            Cancel
-          </button>
-          <button
-            @click="deleteApplication"
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- item-level confirmation modals moved into ApplicationItem -->
   </div>
 </template>
 
@@ -146,6 +69,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import applicationService from '../services/applicationService';
 import type { CreatorApplication } from '../models/application';
+import ApplicationItem from './shared/ApplicationItem.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -153,8 +77,7 @@ const authStore = useAuthStore();
 const loading = ref(false);
 const errorMessage = ref('');
 const applications = ref<CreatorApplication[]>([]);
-const showDeleteModal = ref(false);
-const applicationToDelete = ref<number | null>(null);
+// deletion is handled by ApplicationItem via emitted 'deleted' event
 
 const isCreator = computed(() => authStore.user?.role === 'CREATOR');
 const currentUserId = computed(() => authStore.user?.id);
@@ -205,62 +128,14 @@ function editApplication(id: number) {
 /**
  * Show delete confirmation
  */
-function confirmDelete(id: number) {
-  applicationToDelete.value = id;
-  showDeleteModal.value = true;
-}
-
-/**
- * Delete application
- */
-async function deleteApplication() {
-  if (!applicationToDelete.value) return;
-  
-  try {
-    const response = await applicationService.deleteApplication(applicationToDelete.value);
-    if (response.status === 'success') {
-      // Remove from list
-      applications.value = applications.value.filter(app => app.id !== applicationToDelete.value);
-      showDeleteModal.value = false;
-      applicationToDelete.value = null;
-    } else {
-      errorMessage.value = 'Failed to delete application';
-    }
-  } catch (error: any) {
-    console.error('Failed to delete application:', error);
-    errorMessage.value = error.response?.data?.message || 'Failed to delete application';
-    showDeleteModal.value = false;
-  }
+function onDeleted(id: number) {
+  applications.value = applications.value.filter(a => a.id !== id);
 }
 
 /**
  * Get visibility badge class
  */
-function getVisibilityClass(visibility: string): string {
-  switch (visibility) {
-    case 'PUBLIC':
-      return 'bg-green-100 text-green-800';
-    case 'INTERNAL':
-      return 'bg-blue-100 text-blue-800';
-    case 'PRIVATE':
-      return 'bg-gray-100 text-gray-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
-
-/**
- * Format date for display
- */
-function formatDate(dateString?: string): string {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+// visibility and date formatting are handled inside ApplicationItem now
 </script>
 
 <style scoped>
