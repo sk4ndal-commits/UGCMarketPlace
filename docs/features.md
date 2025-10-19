@@ -159,8 +159,45 @@ the best match for my campaign.
 - Action confirmation (accept/reject) < 1 s.
 
 ---
+## 5. Creator – Create Application
 
-## 5. Messaging & Collaboration
+### User Story
+Als Creator möchte ich eine neue Anwendung aus einer Vorlage oder Konfiguration erstellen, damit sie im System registriert und nutzbar ist.
+
+### Acceptance Criteria
+- [ ] Formular erlaubt Eingabe von Name, Beschreibung, Sichtbarkeit und optionaler Parameter.
+- [ ] Auswahl einer Vorlage (`templateId`) oder freie Konfiguration möglich.
+- [ ] Integrationen (z. B. Git, OIDC) können optional konfiguriert werden.
+- [ ] Anwendung wird im System registriert und mit eindeutiger ID versehen.
+- [ ] Ereignis `creator.application.created` wird nach erfolgreicher Erstellung ausgelöst.
+
+### Example Data / Flows
+
+**Input:**
+- Name: `Customer Portal`
+- Template: `tpl-react-spa-01`
+- Visibility: `internal`
+- Owner: `team-customer`
+
+**Expected Output:**
+- Anwendung `Customer Portal` mit ID `app_9f2a1c` erstellt.
+- Endpunkte und Integrationen konfiguriert.
+- Sichtbar im internen App-Katalog.
+
+### Constraints
+- Rollenberechtigung `creator` erforderlich.
+- Anwendungsname muss eindeutig sein.
+- Template muss verfügbar und Parameter vollständig sein.
+- Integrationen werden nur bei erfolgreicher Validierung aktiviert.
+
+### Performance or UX Targets
+- Erstellungsvorgang ≤ 2 Minuten.
+- API-Antwort ≤ 500 ms.
+- Ereignis wird innerhalb von ≤ 5 s nach Erstellung publiziert.
+
+ ---
+
+## 6. Messaging & Collaboration
 
 ### User story
 
@@ -198,7 +235,7 @@ campaign details.
 
 ---
 
-## 6. Payment & Escrow
+## 7. Payment & Escrow
 
 ### User story
 
@@ -236,7 +273,7 @@ is paid only after delivery.
 
 ---
 
-## 7. Content Delivery & Approval
+## 8. Content Delivery & Approval
 
 ### User story
 
@@ -274,7 +311,7 @@ and approve it.
 
 ---
 
-## 8. Admin Panel
+## 9. Admin Panel
 
 ### User story
 

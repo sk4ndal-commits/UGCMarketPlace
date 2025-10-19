@@ -420,3 +420,119 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             'data': {},
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
+    def update_status(self, request, pk=None):
+        """
+        Update application status (shortlist, accept, reject).
+        Only campaign owner (brand) can update status.
+        Only active campaigns can accept applications.
+        Selection is irreversible after payment initiation.
+        """
+        application = self.get_object()
+        new_status = request.data.get('status')
+        
+        # Verify user is the campaign owner
+        if request.user != application.campaign.brand:
+            return Response({
+                'status': 'error',
+                'data': {},
+                'errors': ['Only the campaign owner can review applications.']
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Validate status value
+        valid_statuses = ['SHORTLISTED', 'ACCEPTED', 'REJECTED']
+        if new_status not in valid_statuses:
+            return Response({
+                'status': 'error',
+                'data': {},
+                'errors': [f'Invalid status. Must be one of: {", ".join(valid_statuses)}']
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if campaign is active (only for ACCEPTED status)
+        if new_status == 'ACCEPTED':
+            if application.campaign.status != Campaign.Status.LIVE:
+                return Response({
+                    'status': 'error',
+                    'data': {},
+                    'errors': ['Only active campaigns can accept applications.']
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Store old status for notification logic
+        old_status = application.status
+        
+        # Update status
+        application.status = new_status
+        application.save()
+        
+        # Send notification email for rejected applications
+        if new_status == 'REJECTED':
+            try:
+                send_mail(
+                    subject=f'Application Update: {application.campaign.title}',
+                    message=f'Dear {application.influencer.email},\n\n'
+                            f'Thank you for your interest in the campaign "{application.campaign.title}".\n\n'
+                            f'After careful consideration, we have decided not to move forward with your application at this time.\n\n'
+                            f'We appreciate your effort and encourage you to apply to other campaigns that match your profile.\n\n'
+                            f'Best regards,\n'
+                            f'{application.campaign.brand.email}\n'
+                            f'CollabMarket Team',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[application.influencer.email],
+                    fail_silently=True,
+                )
+            except Exception as e:
+                print(f"Failed to send rejection email: {e}")
+        
+        # Send notification email for accepted applications
+        if new_status == 'ACCEPTED':
+            try:
+                send_mail(
+                    subject=f'Congratulations! Application Accepted: {application.campaign.title}',
+                    message=f'Dear {application.influencer.email},\n\n'
+                            f'Great news! Your application for the campaign "{application.campaign.title}" has been accepted.\n\n'
+                            f'Campaign Details:\n'
+                            f'- Title: {application.campaign.title}\n'
+                            f'- Budget: €{application.campaign.budget}\n'
+                            f'- Deadline: {application.campaign.deadline}\n\n'
+                            f'Next Steps:\n'
+                            f'1. A payment request will be issued to the brand\n'
+                            f'2. Once payment is confirmed, you can start working on the deliverables\n'
+                            f'3. The brand will contact you with further details\n\n'
+                            f'Best regards,\n'
+                            f'CollabMarket Team',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[application.influencer.email],
+                    fail_silently=True,
+                )
+                
+                # Also notify the brand about the acceptance
+                send_mail(
+                    subject=f'Application Accepted - Payment Required: {application.campaign.title}',
+                    message=f'Dear {application.campaign.brand.email},\n\n'
+                            f'You have accepted an application for your campaign "{application.campaign.title}".\n\n'
+                            f'Influencer Details:\n'
+                            f'- Email: {application.influencer.email}\n'
+                            f'- Proposed Price: €{application.proposed_price if application.proposed_price else application.campaign.budget}\n\n'
+                            f'Next Steps:\n'
+                            f'1. A payment request will be issued\n'
+                            f'2. Please proceed with payment to initiate the collaboration\n'
+                            f'3. Once payment is confirmed, the influencer will start working\n\n'
+                            f'Note: This selection is irreversible after payment initiation.\n\n'
+                            f'Best regards,\n'
+                            f'CollabMarket Team',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[application.campaign.brand.email],
+                    fail_silently=True,
+                )
+            except Exception as e:
+                print(f"Failed to send acceptance email: {e}")
+        
+        # Serialize and return updated application
+        serializer = ApplicationSerializer(application, context={'request': request})
+        
+        return Response({
+            'status': 'success',
+            'data': serializer.data,
+            'errors': []
+        })

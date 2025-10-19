@@ -58,6 +58,9 @@ export interface Application {
   campaign_title?: string;
   influencer?: number;
   influencer_email?: string;
+  influencer_followers?: number;
+  influencer_engagement_rate?: string | number;
+  influencer_platform?: string;
   pitch: string;
   portfolio_link?: string;
   proposed_price?: string | number;
@@ -304,6 +307,17 @@ const campaignService = {
       pitch: applicationData.pitch,
       portfolio_link: applicationData.portfolio_link || null,
       proposed_price: applicationData.proposed_price || null,
+    });
+    return response.data;
+  },
+
+  /**
+   * Update application status (shortlist, accept, reject)
+   * Only brands can call this for their campaign applications
+   */
+  async updateApplicationStatus(id: number, status: string): Promise<ApplicationResponse> {
+    const response = await apiClient.patch(`/api/v1/applications/${id}/update_status/`, {
+      status,
     });
     return response.data;
   },

@@ -61,6 +61,29 @@ class User(AbstractUser):
         help_text=_('Date when user gave GDPR consent')
     )
     
+    # Influencer profile fields
+    followers = models.IntegerField(
+        _('followers'),
+        null=True,
+        blank=True,
+        help_text=_('Number of followers/subscribers (for influencers)')
+    )
+    engagement_rate = models.DecimalField(
+        _('engagement rate'),
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('Engagement rate percentage (for influencers)')
+    )
+    platform = models.CharField(
+        _('platform'),
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text=_('Primary social media platform (for influencers)')
+    )
+    
     # Additional fields
     is_email_verified = models.BooleanField(_('email verified'), default=False)
     created_at = models.DateTimeField(auto_now_add=True)

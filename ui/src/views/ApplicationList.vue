@@ -64,6 +64,22 @@
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div v-if="isBrand" class="flex items-center">
+                  <strong class="mr-2">Influencer:</strong>
+                  <span class="text-gray-700">{{ application.influencer_email }}</span>
+                </div>
+                <div v-if="isBrand && application.influencer_platform" class="flex items-center">
+                  <strong class="mr-2">Platform:</strong>
+                  <span class="text-gray-700">{{ application.influencer_platform }}</span>
+                </div>
+                <div v-if="isBrand && application.influencer_followers" class="flex items-center">
+                  <strong class="mr-2">Followers:</strong>
+                  <span class="text-gray-700">{{ formatNumber(application.influencer_followers) }}</span>
+                </div>
+                <div v-if="isBrand && application.influencer_engagement_rate" class="flex items-center">
+                  <strong class="mr-2">Engagement:</strong>
+                  <span class="text-gray-700">{{ formatEngagement(application.influencer_engagement_rate) }}%</span>
+                </div>
                 <div v-if="application.portfolio_link" class="flex items-center">
                   <strong class="mr-2">Portfolio:</strong>
                   <a 
@@ -81,10 +97,6 @@
                     €{{ formatPrice(application.proposed_price) }}
                   </span>
                 </div>
-                <div v-if="isBrand" class="flex items-center">
-                  <strong class="mr-2">Influencer:</strong>
-                  <span class="text-gray-700">{{ application.influencer_email }}</span>
-                </div>
                 <div class="flex items-center">
                   <strong class="mr-2">Submitted:</strong>
                   <span class="text-gray-700">{{ formatDate(application.created_at!) }}</span>
@@ -101,6 +113,34 @@
                 <span class="mr-2">👁</span>View Campaign
               </button>
               
+              <!-- Brand Actions -->
+              <template v-if="isBrand">
+                <button
+                  v-if="application.status === 'PENDING'"
+                  class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  @click="updateStatus(application.id!, 'SHORTLISTED')"
+                >
+                  <span class="mr-2">⭐</span>Shortlist
+                </button>
+                
+                <button
+                  v-if="application.status === 'PENDING' || application.status === 'SHORTLISTED'"
+                  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                  @click="confirmAction(application.id!, 'ACCEPTED', application.campaign_title!)"
+                >
+                  <span class="mr-2">✓</span>Accept
+                </button>
+                
+                <button
+                  v-if="application.status === 'PENDING' || application.status === 'SHORTLISTED'"
+                  class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                  @click="confirmAction(application.id!, 'REJECTED', application.campaign_title!)"
+                >
+                  <span class="mr-2">✗</span>Reject
+                </button>
+              </template>
+              
+              <!-- Influencer Actions -->
               <button
                 v-if="!isBrand"
                 class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -111,6 +151,38 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Dialog -->
+  <div
+    v-if="showConfirmDialog"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    @click.self="cancelConfirmation"
+  >
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+      <h3 class="text-xl font-bold mb-4">
+        {{ confirmDialogTitle }}
+      </h3>
+      <p class="text-gray-700 mb-6">
+        {{ confirmDialogMessage }}
+      </p>
+      <div class="flex justify-end gap-3">
+        <button
+          class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          @click="cancelConfirmation"
+        >
+          Cancel
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg font-medium transition-colors text-white"
+          :class="confirmDialogAction === 'ACCEPTED' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'"
+          @click="executeAction"
+          :disabled="actionInProgress"
+        >
+          {{ actionInProgress ? 'Processing...' : 'Confirm' }}
+        </button>
       </div>
     </div>
   </div>
@@ -128,6 +200,12 @@ const authStore = useAuthStore();
 const applications = ref<Application[]>([]);
 const loading = ref(true);
 const errorMessage = ref('');
+const showConfirmDialog = ref(false);
+const confirmDialogTitle = ref('');
+const confirmDialogMessage = ref('');
+const confirmDialogAction = ref('');
+const confirmApplicationId = ref<number | null>(null);
+const actionInProgress = ref(false);
 
 const isBrand = computed(() => authStore.user?.role === 'BRAND');
 
@@ -183,6 +261,82 @@ const formatDate = (dateString: string): string => {
     hour: '2-digit',
     minute: '2-digit',
   });
+};
+
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+};
+
+const formatEngagement = (rate: string | number): string => {
+  const rateNum = typeof rate === 'string' ? parseFloat(rate) : rate;
+  return rateNum.toFixed(2);
+};
+
+const confirmAction = (applicationId: number, action: string, campaignTitle: string) => {
+  confirmApplicationId.value = applicationId;
+  confirmDialogAction.value = action;
+  
+  if (action === 'ACCEPTED') {
+    confirmDialogTitle.value = 'Accept Application';
+    confirmDialogMessage.value = `Are you sure you want to accept this application for "${campaignTitle}"? This will trigger a payment request and the selection will be irreversible after payment initiation.`;
+  } else if (action === 'REJECTED') {
+    confirmDialogTitle.value = 'Reject Application';
+    confirmDialogMessage.value = `Are you sure you want to reject this application for "${campaignTitle}"? The influencer will receive an automated notification.`;
+  }
+  
+  showConfirmDialog.value = true;
+};
+
+const updateStatus = async (applicationId: number, status: string) => {
+  // Shortlist doesn't need confirmation
+  actionInProgress.value = true;
+  errorMessage.value = '';
+  
+  try {
+    await campaignService.updateApplicationStatus(applicationId, status);
+    // Reload applications to reflect changes
+    await loadApplications();
+  } catch (error: any) {
+    console.error('Error updating application status:', error);
+    errorMessage.value = error.response?.data?.errors?.[0] || 'Failed to update application status. Please try again.';
+  } finally {
+    actionInProgress.value = false;
+  }
+};
+
+const executeAction = async () => {
+  if (!confirmApplicationId.value || !confirmDialogAction.value) return;
+  
+  actionInProgress.value = true;
+  errorMessage.value = '';
+  
+  try {
+    await campaignService.updateApplicationStatus(confirmApplicationId.value, confirmDialogAction.value);
+    showConfirmDialog.value = false;
+    // Reload applications to reflect changes
+    await loadApplications();
+  } catch (error: any) {
+    console.error('Error updating application status:', error);
+    errorMessage.value = error.response?.data?.errors?.[0] || 'Failed to update application status. Please try again.';
+    showConfirmDialog.value = false;
+  } finally {
+    actionInProgress.value = false;
+    confirmApplicationId.value = null;
+    confirmDialogAction.value = '';
+  }
+};
+
+const cancelConfirmation = () => {
+  showConfirmDialog.value = false;
+  confirmApplicationId.value = null;
+  confirmDialogAction.value = '';
+  confirmDialogTitle.value = '';
+  confirmDialogMessage.value = '';
 };
 
 onMounted(() => {

@@ -162,11 +162,21 @@ class CampaignCreateSerializer(serializers.ModelSerializer):
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
-    """Serializer for Application model."""
+    """Serializer for Application model with influencer profile details."""
     
     campaign_title = serializers.CharField(source='campaign.title', read_only=True)
     influencer_email = serializers.EmailField(source='influencer.email', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    # Influencer profile fields
+    influencer_followers = serializers.IntegerField(source='influencer.followers', read_only=True)
+    influencer_engagement_rate = serializers.DecimalField(
+        source='influencer.engagement_rate',
+        max_digits=5,
+        decimal_places=2,
+        read_only=True
+    )
+    influencer_platform = serializers.CharField(source='influencer.platform', read_only=True)
     
     class Meta:
         model = Application
@@ -176,6 +186,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'campaign_title',
             'influencer',
             'influencer_email',
+            'influencer_followers',
+            'influencer_engagement_rate',
+            'influencer_platform',
             'pitch',
             'portfolio_link',
             'proposed_price',
