@@ -69,7 +69,7 @@
               <div class="card-body">
                 <h3 class="card-title h5 fw-bold">Browse Campaigns</h3>
                 <p class="card-text text-muted small">Discover available UGC campaigns and find your next collaboration.</p>
-                <button class="btn btn-primary btn-sm w-100" disabled>Coming Soon</button>
+                <button class="btn btn-primary btn-sm w-100" @click="router.push('/campaigns')">Browse Campaigns</button>
               </div>
             </div>
           </div>
@@ -79,7 +79,7 @@
               <div class="card-body">
                 <h3 class="card-title h5 fw-bold">My Applications</h3>
                 <p class="card-text text-muted small">Track your submitted applications and their status.</p>
-                <button class="btn btn-secondary btn-sm w-100" disabled>Coming Soon</button>
+                <button class="btn btn-secondary btn-sm w-100" @click="router.push('/applications')">View Applications</button>
               </div>
             </div>
           </div>
@@ -106,16 +106,38 @@
         </template>
       </div>
       
+      <!-- Creator Feature Banner -->
+      <div v-if="user?.role === 'INFLUENCER'" class="card border-success shadow-sm mb-4">
+        <div class="card-body p-4 text-center">
+          <h3 class="fw-bold mb-3 text-success">🚀 New Features Available!</h3>
+          <p class="text-muted mb-4">
+            You can now browse campaigns, apply to collaborations, and track your applications!
+          </p>
+          <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+            <button class="btn btn-success" @click="router.push('/campaigns')">
+              <i class="bi bi-search me-2"></i>Browse Campaigns
+            </button>
+            <button class="btn btn-outline-success" @click="router.push('/applications')">
+              <i class="bi bi-list-check me-2"></i>My Applications
+            </button>
+          </div>
+        </div>
+      </div>
+      
       <div class="card border-primary shadow-sm">
         <div class="card-body p-4 p-md-5 text-center">
           <h3 class="fw-bold mb-3">🎉 Welcome to Civana!</h3>
           <p class="text-muted mb-4">
-            Your authentication is complete. The dashboard features are currently under development.
-            This is the MVP authentication implementation.
+            <template v-if="user?.role === 'BRAND'">
+              Create campaigns and connect with talented creators.
+            </template>
+            <template v-else>
+              Start your journey by exploring available campaigns and applying to collaborations.
+            </template>
           </p>
           <div class="card bg-white border-0 shadow-sm mx-auto" style="max-width: 600px;">
             <div class="card-body text-start">
-              <h4 class="h6 fw-bold mb-3">✅ Completed Features:</h4>
+              <h4 class="h6 fw-bold mb-3">✅ Platform Features:</h4>
               <ul class="list-unstyled mb-0">
                 <li class="mb-2 text-muted">• User registration with email/password</li>
                 <li class="mb-2 text-muted">• Secure login and logout</li>
@@ -124,6 +146,14 @@
                 <li class="mb-2 text-muted">• JWT token authentication</li>
                 <li class="mb-2 text-muted">• GDPR consent tracking</li>
                 <li class="mb-2 text-muted">• Protected routes and navigation guards</li>
+                <template v-if="user?.role === 'BRAND'">
+                  <li class="mb-2 text-success fw-bold">• Campaign creation & management</li>
+                </template>
+                <template v-else>
+                  <li class="mb-2 text-success fw-bold">• Campaign browsing with filters</li>
+                  <li class="mb-2 text-success fw-bold">• Application submission</li>
+                  <li class="mb-2 text-success fw-bold">• Application tracking</li>
+                </template>
               </ul>
             </div>
           </div>

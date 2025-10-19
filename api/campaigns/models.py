@@ -34,6 +34,17 @@ class Campaign(models.Model):
         YOUTUBE_VIDEO = 'YOUTUBE_VIDEO', _('YouTube Video')
         YOUTUBE_SHORT = 'YOUTUBE_SHORT', _('YouTube Short')
     
+    class Category(models.TextChoices):
+        BEAUTY = 'BEAUTY', _('Beauty')
+        FASHION = 'FASHION', _('Fashion')
+        FITNESS = 'FITNESS', _('Fitness')
+        FOOD = 'FOOD', _('Food')
+        TECH = 'TECH', _('Tech')
+        TRAVEL = 'TRAVEL', _('Travel')
+        LIFESTYLE = 'LIFESTYLE', _('Lifestyle')
+        GAMING = 'GAMING', _('Gaming')
+        OTHER = 'OTHER', _('Other')
+    
     # Basic fields
     title = models.CharField(
         _('title'),
@@ -49,6 +60,13 @@ class Campaign(models.Model):
         max_length=50,
         choices=ContentType.choices,
         help_text=_('Type of content to be created')
+    )
+    category = models.CharField(
+        _('category'),
+        max_length=50,
+        choices=Category.choices,
+        default=Category.OTHER,
+        help_text=_('Campaign category')
     )
     deliverables = models.TextField(
         _('deliverables'),
@@ -139,3 +157,91 @@ class CampaignFile(models.Model):
     
     def __str__(self):
         return f"File for {self.campaign.title}"
+
+
+class Application(models.Model):
+    """Model for influencer applications to campaigns."""
+    
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', _('Pending')
+        SHORTLISTED = 'SHORTLISTED', _('Shortlisted')
+        ACCEPTED = 'ACCEPTED', _('Accepted')
+        REJECTED = 'REJECTED', _('Rejected')
+    
+    # Relationships
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.CASCADE,
+        related_name='applications',
+        help_text=_('Campaign being applied to')
+    )
+    influencer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='applications',
+        limit_choices_to={'role': 'INFLUENCER'},
+        help_text=_('Influencer submitting the application')
+    )
+    
+    # Application details
+    pitch = models.TextField(
+        _('pitch'),
+        help_text=_('Short text pitch from the influencer')
+    )
+    portfolio_link = models.URLField(
+        _('portfolio link'),
+        blank=True,
+        null=True,
+        help_text=_('Optional portfolio or social media link')
+    )
+    proposed_price = models.DecimalField(
+        _('proposed price'),
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        blank=True,
+        null=True,
+        help_text=_('Price proposed by influencer (if not fixed)')
+    )
+    
+    # Status and metadata
+    status = models.CharField(
+        _('status'),
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        help_text=_('Application status')
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('application')
+        verbose_name_plural = _('applications')
+        ordering = ['-created_at']
+        unique_together = ['campaign', 'influencer']
+        indexes = [
+            models.Index(fields=['campaign', '-created_at']),
+            models.Index(fields=['influencer', '-created_at']),
+            models.Index(fields=['status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.influencer.email} - {self.campaign.title}"
+    
+    def clean(self):
+        """Validate application constraints."""
+        super().clean()
+        
+        # Check if campaign is expired
+        if self.campaign.deadline < timezone.now().date():
+            raise ValidationError({'campaign': _('Cannot apply to expired campaigns.')})
+        
+        # Check if campaign is live
+        if self.campaign.status != Campaign.Status.LIVE:
+            raise ValidationError({'campaign': _('Can only apply to live campaigns.')})
+    
+    def save(self, *args, **kwargs):
+        """Override save to run clean validation."""
+        self.full_clean()
+        super().save(*args, **kwargs)

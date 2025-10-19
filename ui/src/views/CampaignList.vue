@@ -13,6 +13,101 @@
           </button>
         </div>
 
+        <!-- Filters for Influencers -->
+        <div v-if="!isBrand" class="card mb-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">
+                <i class="bi bi-funnel me-2"></i>Filter Campaigns
+              </h5>
+              <button
+                v-if="hasActiveFilters"
+                class="btn btn-sm btn-outline-secondary"
+                @click="clearFilters"
+              >
+                <i class="bi bi-x-circle me-1"></i>Clear Filters
+              </button>
+            </div>
+            
+            <div class="row g-3">
+              <!-- Budget Range -->
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label">Budget Range</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">€</span>
+                  <input
+                    v-model="filters.budget_min"
+                    type="number"
+                    class="form-control"
+                    placeholder="Min"
+                    min="0"
+                    step="1"
+                  />
+                  <span class="input-group-text">-</span>
+                  <span class="input-group-text">€</span>
+                  <input
+                    v-model="filters.budget_max"
+                    type="number"
+                    class="form-control"
+                    placeholder="Max"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+              </div>
+
+              <!-- Category -->
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label">Category</label>
+                <select v-model="filters.category" class="form-select form-select-sm">
+                  <option value="">All Categories</option>
+                  <option
+                    v-for="category in categoryChoices"
+                    :key="category.value"
+                    :value="category.value"
+                  >
+                    {{ category.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Platform/Content Type -->
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label">Platform</label>
+                <select v-model="filters.content_type" class="form-select form-select-sm">
+                  <option value="">All Platforms</option>
+                  <option
+                    v-for="contentType in contentTypeChoices"
+                    :key="contentType.value"
+                    :value="contentType.value"
+                  >
+                    {{ contentType.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Deadline -->
+              <div class="col-md-6 col-lg-3">
+                <label class="form-label">Deadline Before</label>
+                <input
+                  v-model="filters.deadline_before"
+                  type="date"
+                  class="form-control form-control-sm"
+                />
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <button
+                class="btn btn-primary btn-sm"
+                @click="applyFilters"
+              >
+                <i class="bi bi-search me-1"></i>Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
@@ -165,7 +260,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
-import campaignService, { type Campaign } from '../services/campaignService';
+import campaignService, { type Campaign, type CampaignFilters } from '../services/campaignService';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -177,14 +272,59 @@ const showDeleteModal = ref(false);
 const campaignToDelete = ref<Campaign | null>(null);
 const isDeleting = ref(false);
 
+// Filter state
+const filters = ref<CampaignFilters>({
+  budget_min: undefined,
+  budget_max: undefined,
+  category: '',
+  content_type: '',
+  deadline_before: '',
+});
+
 const isBrand = computed(() => authStore.user?.role === 'BRAND');
 
-const loadCampaigns = async () => {
+const hasActiveFilters = computed(() => {
+  return !!(
+    filters.value.budget_min ||
+    filters.value.budget_max ||
+    filters.value.category ||
+    filters.value.content_type ||
+    filters.value.deadline_before
+  );
+});
+
+const categoryChoices = campaignService.getCategoryChoices();
+const contentTypeChoices = campaignService.getContentTypeChoices();
+
+const loadCampaigns = async (applyFilters = false) => {
   loading.value = true;
   errorMessage.value = '';
   
   try {
-    const response = await campaignService.getCampaigns();
+    // Build filter object for influencers
+    const filterParams: CampaignFilters = {};
+    
+    if (!isBrand.value && applyFilters) {
+      if (filters.value.budget_min) {
+        filterParams.budget_min = Number(filters.value.budget_min);
+      }
+      if (filters.value.budget_max) {
+        filterParams.budget_max = Number(filters.value.budget_max);
+      }
+      if (filters.value.category) {
+        filterParams.category = filters.value.category;
+      }
+      if (filters.value.content_type) {
+        filterParams.content_type = filters.value.content_type;
+      }
+      if (filters.value.deadline_before) {
+        filterParams.deadline_before = filters.value.deadline_before;
+      }
+    }
+    
+    const response = await campaignService.getCampaigns(
+      !isBrand.value && applyFilters ? filterParams : undefined
+    );
     campaigns.value = Array.isArray(response.data) ? response.data : [response.data];
   } catch (error: any) {
     console.error('Error loading campaigns:', error);
@@ -192,6 +332,21 @@ const loadCampaigns = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const applyFilters = () => {
+  loadCampaigns(true);
+};
+
+const clearFilters = () => {
+  filters.value = {
+    budget_min: undefined,
+    budget_max: undefined,
+    category: '',
+    content_type: '',
+    deadline_before: '',
+  };
+  loadCampaigns(false);
 };
 
 const viewCampaign = (id: number) => {
@@ -253,6 +408,7 @@ const formatDate = (dateString: string): string => {
 };
 
 const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 };

@@ -62,6 +62,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/CampaignForm.vue'),
     meta: { requiresAuth: true, requiresRole: true },
   },
+  {
+    path: '/campaigns/:id',
+    name: 'CampaignDetail',
+    component: () => import('../views/CampaignDetail.vue'),
+    meta: { requiresAuth: true, requiresRole: true },
+  },
+  {
+    path: '/applications',
+    name: 'ApplicationList',
+    component: () => import('../views/ApplicationList.vue'),
+    meta: { requiresAuth: true, requiresRole: true },
+  },
 ];
 
 const router = createRouter({
