@@ -1,67 +1,77 @@
 <template>
-  <div class="role-container">
-    <div class="role-card">
-      <h1>Choose Your Role</h1>
-      <p class="subtitle">Select how you'd like to use Civana</p>
-      
-      <!-- Error Messages -->
-      <div v-if="error" class="error-message" role="alert">
-        {{ error }}
-      </div>
-      
-      <div class="role-options">
-        <!-- Brand Option -->
-        <div
-          class="role-option"
-          :class="{ selected: selectedRole === 'BRAND' }"
-          @click="selectRole('BRAND')"
-        >
-          <div class="role-icon">🏢</div>
-          <h2>Brand</h2>
-          <p>
-            Create UGC campaigns, collaborate with creators, and get authentic content for your brand.
-          </p>
-          <ul class="role-features">
-            <li>Post campaign briefs</li>
-            <li>Review creator applications</li>
-            <li>Manage collaborations</li>
-            <li>Receive quality content</li>
-          </ul>
+  <div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient-primary p-3">
+    <div class="card shadow-lg" style="max-width: 900px; width: 100%;">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="text-center mb-2 fw-bold">Choose Your Role</h1>
+        <p class="text-center text-muted mb-4">Select how you'd like to use Civana</p>
+        
+        <!-- Error Messages -->
+        <div v-if="error" class="alert alert-danger text-center" role="alert">
+          {{ error }}
         </div>
         
-        <!-- Influencer Option -->
-        <div
-          class="role-option"
-          :class="{ selected: selectedRole === 'INFLUENCER' }"
-          @click="selectRole('INFLUENCER')"
-        >
-          <div class="role-icon">✨</div>
-          <h2>Creator</h2>
-          <p>
-            Browse campaigns, apply with proposals, and get paid for creating authentic content.
-          </p>
-          <ul class="role-features">
-            <li>Browse available campaigns</li>
-            <li>Submit applications</li>
-            <li>Collaborate with brands</li>
-            <li>Get paid for your work</li>
-          </ul>
+        <div class="row g-3 mb-4">
+          <!-- Brand Option -->
+          <div class="col-md-6">
+            <div
+              class="card h-100 cursor-pointer card-hover"
+              :class="{ 'border-primary border-2 bg-light': selectedRole === 'BRAND' }"
+              @click="selectRole('BRAND')"
+            >
+              <div class="card-body p-4">
+                <div class="text-center fs-1 mb-3">🏢</div>
+                <h2 class="text-center fs-5 fw-bold mb-3">Brand</h2>
+                <p class="text-center text-muted mb-3">
+                  Create UGC campaigns, collaborate with creators, and get authentic content for your brand.
+                </p>
+                <ul class="list-unstyled">
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Post campaign briefs</li>
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Review creator applications</li>
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Manage collaborations</li>
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Receive quality content</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Influencer Option -->
+          <div class="col-md-6">
+            <div
+              class="card h-100 cursor-pointer card-hover"
+              :class="{ 'border-primary border-2 bg-light': selectedRole === 'INFLUENCER' }"
+              @click="selectRole('INFLUENCER')"
+            >
+              <div class="card-body p-4">
+                <div class="text-center fs-1 mb-3">✨</div>
+                <h2 class="text-center fs-5 fw-bold mb-3">Creator</h2>
+                <p class="text-center text-muted mb-3">
+                  Browse campaigns, apply with proposals, and get paid for creating authentic content.
+                </p>
+                <ul class="list-unstyled">
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Browse available campaigns</li>
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Submit applications</li>
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Collaborate with brands</li>
+                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Get paid for your work</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      <!-- Confirm Button -->
-      <button
-        class="btn btn-primary"
-        :disabled="!selectedRole || loading"
-        @click="handleConfirm"
-      >
-        <span v-if="loading">Confirming...</span>
-        <span v-else>Continue as {{ selectedRole === 'BRAND' ? 'Brand' : 'Creator' }}</span>
-      </button>
-      
-      <!-- Logout Link -->
-      <div class="role-footer">
-        <button @click="handleLogout" class="logout-link">Log out</button>
+        
+        <!-- Confirm Button -->
+        <button
+          class="btn btn-primary w-100 py-2 fw-semibold"
+          :disabled="!selectedRole || loading"
+          @click="handleConfirm"
+        >
+          <span v-if="loading">Confirming...</span>
+          <span v-else>Continue as {{ selectedRole === 'BRAND' ? 'Brand' : 'Creator' }}</span>
+        </button>
+        
+        <!-- Logout Link -->
+        <div class="text-center mt-4">
+          <button @click="handleLogout" class="btn btn-link text-muted text-decoration-underline">Log out</button>
+        </div>
       </div>
     </div>
   </div>
@@ -102,164 +112,8 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-.role-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-}
-
-.role-card {
-  background: white;
-  border-radius: 12px;
-  padding: 40px;
-  width: 100%;
-  max-width: 900px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  margin: 0 0 10px 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a202c;
-  text-align: center;
-}
-
-.subtitle {
-  margin: 0 0 30px 0;
-  font-size: 14px;
-  color: #718096;
-  text-align: center;
-}
-
-.error-message {
-  padding: 12px;
-  margin-bottom: 20px;
-  background-color: #fed7d7;
-  border: 1px solid #fc8181;
-  border-radius: 8px;
-  color: #c53030;
-  font-size: 14px;
-  text-align: center;
-}
-
-.role-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.role-option {
-  padding: 30px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
+/* Bootstrap classes are used, minimal custom styles needed */
+.cursor-pointer {
   cursor: pointer;
-  transition: all 0.3s;
-  background: white;
-}
-
-.role-option:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
-}
-
-.role-option.selected {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-}
-
-.role-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.role-option h2 {
-  margin: 0 0 12px 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1a202c;
-  text-align: center;
-}
-
-.role-option p {
-  margin: 0 0 20px 0;
-  font-size: 14px;
-  color: #4a5568;
-  line-height: 1.6;
-  text-align: center;
-}
-
-.role-features {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.role-features li {
-  padding: 8px 0;
-  font-size: 13px;
-  color: #718096;
-  position: relative;
-  padding-left: 24px;
-}
-
-.role-features li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: #667eea;
-  font-weight: bold;
-}
-
-.btn {
-  width: 100%;
-  padding: 16px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.role-footer {
-  margin-top: 24px;
-  text-align: center;
-}
-
-.logout-link {
-  background: none;
-  border: none;
-  color: #718096;
-  font-size: 14px;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.logout-link:hover {
-  color: #4a5568;
 }
 </style>
