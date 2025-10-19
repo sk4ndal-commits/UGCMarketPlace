@@ -69,9 +69,33 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresRole: true },
   },
   {
+    path: '/my-applications',
+    name: 'MyApplications',
+    component: () => import('../views/MyApplications.vue'),
+    meta: { requiresAuth: true, requiresRole: true },
+  },
+  {
     path: '/applications',
     name: 'ApplicationList',
     component: () => import('../views/ApplicationList.vue'),
+    meta: { requiresAuth: true, requiresRole: true },
+  },
+  {
+    path: '/applications/new',
+    name: 'ApplicationCreate',
+    component: () => import('../views/ApplicationForm.vue'),
+    meta: { requiresAuth: true, requiresRole: true },
+  },
+  {
+    path: '/applications/:id/edit',
+    name: 'ApplicationEdit',
+    component: () => import('../views/ApplicationForm.vue'),
+    meta: { requiresAuth: true, requiresRole: true },
+  },
+  {
+    path: '/applications/:id',
+    name: 'ApplicationDetail',
+    component: () => import('../views/ApplicationDetail.vue'),
     meta: { requiresAuth: true, requiresRole: true },
   },
 ];

@@ -113,14 +113,30 @@
 
             <!-- Success Message -->
             <div v-if="applicationSuccess" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-              <span class="mr-2">✓</span>
-              Application submitted successfully! You will receive a confirmation email shortly.
+              <p class="mb-2">
+                <span class="mr-2">✓</span>
+                Application submitted successfully! You will receive a confirmation email shortly.
+              </p>
+              <button
+                @click="$router.push('/my-applications')"
+                class="text-green-800 underline hover:text-green-900 font-medium"
+              >
+                View My Applications →
+              </button>
             </div>
 
             <!-- Already Applied Message -->
             <div v-else-if="alreadyApplied" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
-              <span class="mr-2">ℹ</span>
-              You have already applied to this campaign.
+              <p class="mb-2">
+                <span class="mr-2">!</span>
+                You have already applied to this campaign.
+              </p>
+              <button
+                @click="$router.push('/my-applications')"
+                class="text-blue-800 underline hover:text-blue-900 font-medium"
+              >
+                View My Applications →
+              </button>
             </div>
 
             <!-- Application Form -->
@@ -239,11 +255,34 @@ const loadCampaign = async () => {
     const response = await campaignService.getCampaign(campaignId);
     campaign.value = response.data as Campaign;
     applicationForm.value.campaign = campaignId;
+    
+    // Check if user already applied to this campaign
+    if (isInfluencer.value) {
+      await checkIfAlreadyApplied(campaignId);
+    }
   } catch (error: any) {
     console.error('Error loading campaign:', error);
     errorMessage.value = 'Failed to load campaign details. Please try again later.';
   } finally {
     loading.value = false;
+  }
+};
+
+const checkIfAlreadyApplied = async (campaignId: number) => {
+  try {
+    const response = await campaignService.getApplications();
+    if (response.status === 'success' && Array.isArray(response.data)) {
+      // Check if any application is for this campaign
+      const existingApplication = response.data.find(
+        (app: any) => app.campaign === campaignId
+      );
+      if (existingApplication) {
+        alreadyApplied.value = true;
+      }
+    }
+  } catch (error: any) {
+    console.error('Error checking existing applications:', error);
+    // Don't show error to user, just log it
   }
 };
 

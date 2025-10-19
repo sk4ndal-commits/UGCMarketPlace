@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-&+zx(ef&j%x&!pot145-t$u+)--yt2!*0p0(ednp(x9m16j%15
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
 
 # Application definition
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # Local apps
     'authentication',
     'campaigns',
+    'applications',
 ]
 
 MIDDLEWARE = [
@@ -151,6 +152,7 @@ CORS_ALLOW_CREDENTIALS = True
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # For tests
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

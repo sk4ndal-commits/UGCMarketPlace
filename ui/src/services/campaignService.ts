@@ -286,7 +286,7 @@ const campaignService = {
    * Get all applications (filtered by user role on backend)
    */
   async getApplications(): Promise<ApplicationResponse> {
-    const response = await apiClient.get('/api/v1/applications/');
+    const response = await apiClient.get('/api/v1/campaign-applications/');
     return response.data;
   },
 
@@ -294,7 +294,7 @@ const campaignService = {
    * Get a single application by ID
    */
   async getApplication(id: number): Promise<ApplicationResponse> {
-    const response = await apiClient.get(`/api/v1/applications/${id}/`);
+    const response = await apiClient.get(`/api/v1/campaign-applications/${id}/`);
     return response.data;
   },
 
@@ -302,7 +302,7 @@ const campaignService = {
    * Create a new application
    */
   async createApplication(applicationData: ApplicationFormData): Promise<ApplicationResponse> {
-    const response = await apiClient.post('/api/v1/applications/', {
+    const response = await apiClient.post('/api/v1/campaign-applications/', {
       campaign: applicationData.campaign,
       pitch: applicationData.pitch,
       portfolio_link: applicationData.portfolio_link || null,
@@ -316,7 +316,7 @@ const campaignService = {
    * Only brands can call this for their campaign applications
    */
   async updateApplicationStatus(id: number, status: string): Promise<ApplicationResponse> {
-    const response = await apiClient.patch(`/api/v1/applications/${id}/update_status/`, {
+    const response = await apiClient.patch(`/api/v1/campaign-applications/${id}/update_status/`, {
       status,
     });
     return response.data;

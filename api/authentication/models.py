@@ -36,6 +36,7 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         BRAND = 'BRAND', _('Brand')
         INFLUENCER = 'INFLUENCER', _('Influencer')
+        CREATOR = 'CREATOR', _('Creator')
     
     username = None  # Remove username field
     email = models.EmailField(_('email address'), unique=True)

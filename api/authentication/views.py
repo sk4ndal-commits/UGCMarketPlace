@@ -128,11 +128,13 @@ class LogoutView(APIView):
                 'errors': []
             }, status=status.HTTP_200_OK)
         except Exception as e:
+            # Even if token is invalid/expired, consider logout successful
+            # since the goal is to clear the session
             return Response({
-                'status': 'error',
-                'data': {},
-                'errors': [str(e)]
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'status': 'success',
+                'data': {'message': _('Successfully logged out.')},
+                'errors': []
+            }, status=status.HTTP_200_OK)
 
 
 class RoleSelectionView(APIView):

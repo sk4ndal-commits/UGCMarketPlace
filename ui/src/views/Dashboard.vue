@@ -68,7 +68,7 @@
             <div class="p-5">
               <h3 class="text-lg font-bold mb-2">My Applications</h3>
               <p class="text-gray-500 text-sm mb-4">Track your submitted applications and their status.</p>
-              <button class="bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg w-full hover:bg-gray-300 transition-colors" @click="router.push('/applications')">View Applications</button>
+              <button class="bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg w-full hover:bg-gray-300 transition-colors" @click="router.push('/my-applications')">View Applications</button>
             </div>
           </div>
           
@@ -101,7 +101,7 @@
             <button class="bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 transition-colors" @click="router.push('/campaigns')">
               <span class="mr-2">🔍</span>Browse Campaigns
             </button>
-            <button class="border-2 border-green-600 text-green-600 font-medium py-2 px-4 rounded-lg hover:bg-green-50 transition-colors" @click="router.push('/applications')">
+            <button class="border-2 border-green-600 text-green-600 font-medium py-2 px-4 rounded-lg hover:bg-green-50 transition-colors" @click="router.push('/my-applications')">
               <span class="mr-2">✓</span>My Applications
             </button>
           </div>

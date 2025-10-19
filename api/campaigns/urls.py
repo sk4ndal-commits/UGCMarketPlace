@@ -4,7 +4,7 @@ from .views import CampaignViewSet, ApplicationViewSet
 
 router = DefaultRouter()
 router.register(r'campaigns', CampaignViewSet, basename='campaign')
-router.register(r'applications', ApplicationViewSet, basename='application')
+router.register(r'campaign-applications', ApplicationViewSet, basename='campaign-application')
 
 urlpatterns = [
     path('', include(router.urls)),
