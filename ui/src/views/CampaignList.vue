@@ -1,211 +1,203 @@
 <template>
-  <div class="container mt-5">
-    <div class="row">
-      <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2>{{ isBrand ? 'My Campaigns' : 'Available Campaigns' }}</h2>
-          <button
-            v-if="isBrand"
-            class="btn btn-primary"
-            @click="$router.push('/campaigns/create')"
-          >
-            <i class="bi bi-plus-circle me-2"></i>Create Campaign
-          </button>
-        </div>
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">{{ isBrand ? 'My Campaigns' : 'Available Campaigns' }}</h2>
+      <button
+        v-if="isBrand"
+        class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+        @click="$router.push('/campaigns/create')"
+      >
+        <span class="mr-2">➕</span>Create Campaign
+      </button>
+    </div>
 
-        <!-- Filters for Influencers -->
-        <div v-if="!isBrand" class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="mb-0">
-                <i class="bi bi-funnel me-2"></i>Filter Campaigns
-              </h5>
-              <button
-                v-if="hasActiveFilters"
-                class="btn btn-sm btn-outline-secondary"
-                @click="clearFilters"
-              >
-                <i class="bi bi-x-circle me-1"></i>Clear Filters
-              </button>
+    <!-- Filters for Influencers -->
+    <div v-if="!isBrand" class="bg-white rounded-lg shadow-sm p-5 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h5 class="text-lg font-semibold">
+          <span class="mr-2">🔍</span>Filter Campaigns
+        </h5>
+        <button
+          v-if="hasActiveFilters"
+          class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+          @click="clearFilters"
+        >
+          <span class="mr-1">✖</span>Clear Filters
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Budget Range -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Budget Range</label>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center border border-gray-300 rounded">
+              <span class="px-2 text-sm text-gray-600 bg-gray-50">€</span>
+              <input
+                v-model="filters.budget_min"
+                type="number"
+                class="w-20 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
+                placeholder="Min"
+                min="0"
+                step="1"
+              />
             </div>
-            
-            <div class="row g-3">
-              <!-- Budget Range -->
-              <div class="col-md-6 col-lg-3">
-                <label class="form-label">Budget Range</label>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text">€</span>
-                  <input
-                    v-model="filters.budget_min"
-                    type="number"
-                    class="form-control"
-                    placeholder="Min"
-                    min="0"
-                    step="1"
-                  />
-                  <span class="input-group-text">-</span>
-                  <span class="input-group-text">€</span>
-                  <input
-                    v-model="filters.budget_max"
-                    type="number"
-                    class="form-control"
-                    placeholder="Max"
-                    min="0"
-                    step="1"
-                  />
-                </div>
-              </div>
-
-              <!-- Category -->
-              <div class="col-md-6 col-lg-3">
-                <label class="form-label">Category</label>
-                <select v-model="filters.category" class="form-select form-select-sm">
-                  <option value="">All Categories</option>
-                  <option
-                    v-for="category in categoryChoices"
-                    :key="category.value"
-                    :value="category.value"
-                  >
-                    {{ category.label }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Platform/Content Type -->
-              <div class="col-md-6 col-lg-3">
-                <label class="form-label">Platform</label>
-                <select v-model="filters.content_type" class="form-select form-select-sm">
-                  <option value="">All Platforms</option>
-                  <option
-                    v-for="contentType in contentTypeChoices"
-                    :key="contentType.value"
-                    :value="contentType.value"
-                  >
-                    {{ contentType.label }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Deadline -->
-              <div class="col-md-6 col-lg-3">
-                <label class="form-label">Deadline Before</label>
-                <input
-                  v-model="filters.deadline_before"
-                  type="date"
-                  class="form-control form-control-sm"
-                />
-              </div>
-            </div>
-
-            <div class="mt-3">
-              <button
-                class="btn btn-primary btn-sm"
-                @click="applyFilters"
-              >
-                <i class="bi bi-search me-1"></i>Apply Filters
-              </button>
+            <span class="text-gray-500">-</span>
+            <div class="flex items-center border border-gray-300 rounded">
+              <span class="px-2 text-sm text-gray-600 bg-gray-50">€</span>
+              <input
+                v-model="filters.budget_max"
+                type="number"
+                class="w-20 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
+                placeholder="Max"
+                min="0"
+                step="1"
+              />
             </div>
           </div>
         </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <!-- Category -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <select v-model="filters.category" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">All Categories</option>
+            <option
+              v-for="category in categoryChoices"
+              :key="category.value"
+              :value="category.value"
+            >
+              {{ category.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Platform/Content Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Platform</label>
+          <select v-model="filters.content_type" class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">All Platforms</option>
+            <option
+              v-for="contentType in contentTypeChoices"
+              :key="contentType.value"
+              :value="contentType.value"
+            >
+              {{ contentType.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Deadline -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deadline Before</label>
+          <input
+            v-model="filters.deadline_before"
+            type="date"
+            class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button
+          class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity text-sm"
+          @click="applyFilters"
+        >
+          <span class="mr-1">🔍</span>Apply Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-600">Loading campaigns...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div v-else-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="campaigns.length === 0" class="text-center py-12">
+      <div class="text-6xl text-gray-300 mb-4">📭</div>
+      <h4 class="text-xl font-semibold mb-2">No campaigns found</h4>
+      <p class="text-gray-500 mb-4">
+        {{ isBrand ? 'Create your first campaign to get started!' : 'Check back later for new opportunities.' }}
+      </p>
+      <button
+        v-if="isBrand"
+        class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+        @click="$router.push('/campaigns/create')"
+      >
+        Create Campaign
+      </button>
+    </div>
+
+    <!-- Campaigns List -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        v-for="campaign in campaigns"
+        :key="campaign.id"
+        class="bg-white rounded-lg shadow-sm card-hover flex flex-col"
+      >
+        <div class="p-5 flex-1">
+          <div class="flex justify-between items-start mb-3">
+            <h5 class="text-lg font-semibold flex-1">{{ campaign.title }}</h5>
+            <span
+              class="ml-2 px-2 py-1 text-xs font-semibold rounded"
+              :class="getStatusBadgeClass(campaign.status)"
+            >
+              {{ campaign.status_display }}
+            </span>
           </div>
-          <p class="mt-3">Loading campaigns...</p>
-        </div>
-
-        <!-- Error Message -->
-        <div v-else-if="errorMessage" class="alert alert-danger" role="alert">
-          {{ errorMessage }}
-        </div>
-
-        <!-- Empty State -->
-        <div v-else-if="campaigns.length === 0" class="text-center py-5">
-          <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-          <h4 class="mt-3">No campaigns found</h4>
-          <p class="text-muted">
-            {{ isBrand ? 'Create your first campaign to get started!' : 'Check back later for new opportunities.' }}
+          
+          <p class="text-gray-500 text-sm mb-4">
+            {{ truncateText(campaign.description, 100) }}
           </p>
-          <button
-            v-if="isBrand"
-            class="btn btn-primary mt-3"
-            @click="$router.push('/campaigns/create')"
-          >
-            Create Campaign
-          </button>
+
+          <div class="space-y-2">
+            <div class="flex items-center text-sm">
+              <span class="mr-2">🎥</span>
+              <strong class="mr-1">Type:</strong> {{ campaign.content_type_display }}
+            </div>
+            <div class="flex items-center text-sm">
+              <span class="mr-2 text-green-600">💰</span>
+              <strong class="mr-1">Budget:</strong> €{{ formatBudget(campaign.budget) }}
+            </div>
+            <div class="flex items-center text-sm">
+              <span class="mr-2 text-yellow-600">📅</span>
+              <strong class="mr-1">Deadline:</strong> {{ formatDate(campaign.deadline) }}
+            </div>
+            <div v-if="!isBrand" class="flex items-center text-sm">
+              <span class="mr-2 text-blue-600">🏢</span>
+              <strong class="mr-1">Brand:</strong> {{ campaign.brand_email }}
+            </div>
+          </div>
         </div>
 
-        <!-- Campaigns List -->
-        <div v-else class="row">
-          <div
-            v-for="campaign in campaigns"
-            :key="campaign.id"
-            class="col-md-6 col-lg-4 mb-4"
+        <div class="border-t border-gray-200 p-4 flex justify-between items-center">
+          <button
+            class="px-3 py-1.5 text-sm border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition-colors"
+            @click="viewCampaign(campaign.id!)"
           >
-            <div class="card h-100 shadow-sm campaign-card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <h5 class="card-title mb-0">{{ campaign.title }}</h5>
-                  <span
-                    class="badge"
-                    :class="getStatusBadgeClass(campaign.status)"
-                  >
-                    {{ campaign.status_display }}
-                  </span>
-                </div>
-                
-                <p class="card-text text-muted small mb-3">
-                  {{ truncateText(campaign.description, 100) }}
-                </p>
-
-                <div class="campaign-details">
-                  <div class="detail-item mb-2">
-                    <i class="bi bi-camera-video me-2 text-primary"></i>
-                    <strong>Type:</strong> {{ campaign.content_type_display }}
-                  </div>
-                  <div class="detail-item mb-2">
-                    <i class="bi bi-currency-euro me-2 text-success"></i>
-                    <strong>Budget:</strong> €{{ formatBudget(campaign.budget) }}
-                  </div>
-                  <div class="detail-item mb-2">
-                    <i class="bi bi-calendar-event me-2 text-warning"></i>
-                    <strong>Deadline:</strong> {{ formatDate(campaign.deadline) }}
-                  </div>
-                  <div v-if="!isBrand" class="detail-item mb-2">
-                    <i class="bi bi-building me-2 text-info"></i>
-                    <strong>Brand:</strong> {{ campaign.brand_email }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="card-footer bg-transparent">
-                <div class="d-flex justify-content-between">
-                  <button
-                    class="btn btn-sm btn-outline-primary"
-                    @click="viewCampaign(campaign.id!)"
-                  >
-                    <i class="bi bi-eye me-1"></i>View Details
-                  </button>
-                  
-                  <div v-if="isBrand" class="btn-group">
-                    <button
-                      class="btn btn-sm btn-outline-secondary"
-                      @click="editCampaign(campaign.id!)"
-                    >
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button
-                      class="btn btn-sm btn-outline-danger"
-                      @click="confirmDelete(campaign)"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <span class="mr-1">👁</span>View Details
+          </button>
+          
+          <div v-if="isBrand" class="flex gap-2">
+            <button
+              class="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+              @click="editCampaign(campaign.id!)"
+            >
+              ✏️
+            </button>
+            <button
+              class="px-3 py-1.5 text-sm border border-red-500 text-red-500 rounded hover:bg-red-50 transition-colors"
+              @click="confirmDelete(campaign)"
+            >
+              🗑️
+            </button>
           </div>
         </div>
       </div>
@@ -214,42 +206,40 @@
     <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteModal"
-      class="modal fade show d-block"
-      tabindex="-1"
-      style="background-color: rgba(0,0,0,0.5);"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Confirm Delete</h5>
-            <button
-              type="button"
-              class="btn-close"
-              @click="showDeleteModal = false"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <p>Are you sure you want to delete the campaign "{{ campaignToDelete?.title }}"?</p>
-            <p class="text-danger mb-0">This action cannot be undone.</p>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              @click="showDeleteModal = false"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="btn btn-danger"
-              @click="deleteCampaign"
-              :disabled="isDeleting"
-            >
-              <span v-if="isDeleting" class="spinner-border spinner-border-sm me-2"></span>
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
-            </button>
-          </div>
+      <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div class="flex justify-between items-center p-5 border-b">
+          <h5 class="text-lg font-semibold">Confirm Delete</h5>
+          <button
+            type="button"
+            class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            @click="showDeleteModal = false"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="p-5">
+          <p class="mb-3">Are you sure you want to delete the campaign "{{ campaignToDelete?.title }}"?</p>
+          <p class="text-red-600 font-semibold">This action cannot be undone.</p>
+        </div>
+        <div class="flex justify-end gap-3 p-5 border-t">
+          <button
+            type="button"
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            @click="showDeleteModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+            @click="deleteCampaign"
+            :disabled="isDeleting"
+          >
+            <span v-if="isDeleting" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+            {{ isDeleting ? 'Deleting...' : 'Delete' }}
+          </button>
         </div>
       </div>
     </div>
@@ -383,13 +373,13 @@ const deleteCampaign = async () => {
 const getStatusBadgeClass = (status: string): string => {
   switch (status) {
     case 'LIVE':
-      return 'bg-success';
+      return 'bg-green-500 text-white';
     case 'DRAFT':
-      return 'bg-secondary';
+      return 'bg-gray-500 text-white';
     case 'CLOSED':
-      return 'bg-danger';
+      return 'bg-red-500 text-white';
     default:
-      return 'bg-secondary';
+      return 'bg-gray-500 text-white';
   }
 };
 
@@ -419,35 +409,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.campaign-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  border-radius: 8px;
-}
-
-.campaign-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
-
-.card-title {
-  color: #333;
-  font-weight: 600;
-}
-
-.detail-item {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.detail-item i {
-  width: 20px;
-}
-
-.modal.show {
-  display: block;
-}
-
-.btn-group .btn {
-  padding: 0.25rem 0.5rem;
-}
+/* All styles now handled by Tailwind CSS */
 </style>

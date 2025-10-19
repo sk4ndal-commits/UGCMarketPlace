@@ -1,123 +1,113 @@
 <template>
-  <div class="container mt-5">
-    <div class="row">
-      <div class="col-12">
-        <h2 class="mb-4">
-          {{ isBrand ? 'Campaign Applications' : 'My Applications' }}
-        </h2>
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <h2 class="text-2xl font-bold mb-6">
+      {{ isBrand ? 'Campaign Applications' : 'My Applications' }}
+    </h2>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-3">Loading applications...</p>
-        </div>
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-600">Loading applications...</p>
+    </div>
 
-        <!-- Error Message -->
-        <div v-else-if="errorMessage" class="alert alert-danger" role="alert">
-          {{ errorMessage }}
-        </div>
+    <!-- Error Message -->
+    <div v-else-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+      {{ errorMessage }}
+    </div>
 
-        <!-- Empty State -->
-        <div v-else-if="applications.length === 0" class="text-center py-5">
-          <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-          <h4 class="mt-3">No applications found</h4>
-          <p class="text-muted">
-            {{ isBrand 
-              ? 'Applications to your campaigns will appear here.' 
-              : 'You haven\'t applied to any campaigns yet.' 
-            }}
-          </p>
-          <button
-            v-if="!isBrand"
-            class="btn btn-primary mt-3"
-            @click="$router.push('/campaigns')"
-          >
-            Browse Campaigns
-          </button>
-        </div>
+    <!-- Empty State -->
+    <div v-else-if="applications.length === 0" class="text-center py-12">
+      <div class="text-6xl text-gray-300 mb-4">📭</div>
+      <h4 class="text-xl font-semibold mb-2">No applications found</h4>
+      <p class="text-gray-500 mb-4">
+        {{ isBrand 
+          ? 'Applications to your campaigns will appear here.' 
+          : 'You haven\'t applied to any campaigns yet.' 
+        }}
+      </p>
+      <button
+        v-if="!isBrand"
+        class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+        @click="$router.push('/campaigns')"
+      >
+        Browse Campaigns
+      </button>
+    </div>
 
-        <!-- Applications List -->
-        <div v-else>
-          <div class="row">
-            <div
-              v-for="application in applications"
-              :key="application.id"
-              class="col-12 mb-3"
-            >
-              <div class="card shadow-sm application-card">
-                <div class="card-body">
-                  <div class="row">
-                    <!-- Application Info -->
-                    <div class="col-lg-8">
-                      <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h5 class="card-title mb-0">
-                          <i class="bi bi-megaphone me-2 text-primary"></i>
-                          {{ application.campaign_title }}
-                        </h5>
-                        <span
-                          class="badge"
-                          :class="getStatusBadgeClass(application.status)"
-                        >
-                          {{ application.status_display }}
-                        </span>
-                      </div>
+    <!-- Applications List -->
+    <div v-else class="space-y-4">
+      <div
+        v-for="application in applications"
+        :key="application.id"
+        class="bg-white rounded-lg shadow-sm card-hover"
+      >
+        <div class="p-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Application Info -->
+            <div class="lg:col-span-2">
+              <div class="flex justify-between items-start mb-4">
+                <h5 class="text-lg font-semibold flex items-center">
+                  <span class="mr-2 text-blue-600">📢</span>
+                  {{ application.campaign_title }}
+                </h5>
+                <span
+                  class="ml-4 px-3 py-1 text-xs font-semibold rounded"
+                  :class="getStatusBadgeClass(application.status)"
+                >
+                  {{ application.status_display }}
+                </span>
+              </div>
 
-                      <div class="mb-3">
-                        <h6 class="text-muted mb-2">Pitch</h6>
-                        <p class="mb-0">{{ application.pitch }}</p>
-                      </div>
+              <div class="mb-4">
+                <h6 class="text-sm font-semibold text-gray-600 mb-2">Pitch</h6>
+                <p class="text-gray-700">{{ application.pitch }}</p>
+              </div>
 
-                      <div class="row">
-                        <div v-if="application.portfolio_link" class="col-md-6 mb-2">
-                          <strong>Portfolio:</strong>
-                          <a 
-                            :href="application.portfolio_link" 
-                            target="_blank" 
-                            class="ms-2"
-                          >
-                            <i class="bi bi-link-45deg"></i>
-                            View Portfolio
-                          </a>
-                        </div>
-                        <div v-if="application.proposed_price" class="col-md-6 mb-2">
-                          <strong>Proposed Price:</strong>
-                          <span class="ms-2 text-success">
-                            €{{ formatPrice(application.proposed_price) }}
-                          </span>
-                        </div>
-                        <div v-if="isBrand" class="col-md-6 mb-2">
-                          <strong>Influencer:</strong>
-                          <span class="ms-2">{{ application.influencer_email }}</span>
-                        </div>
-                        <div class="col-md-6 mb-2">
-                          <strong>Submitted:</strong>
-                          <span class="ms-2">{{ formatDate(application.created_at!) }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="col-lg-4 d-flex flex-column justify-content-center">
-                      <button
-                        class="btn btn-outline-primary mb-2"
-                        @click="viewCampaign(application.campaign)"
-                      >
-                        <i class="bi bi-eye me-2"></i>View Campaign
-                      </button>
-                      
-                      <button
-                        v-if="!isBrand"
-                        class="btn btn-outline-secondary"
-                        @click="viewApplication(application.id!)"
-                      >
-                        <i class="bi bi-file-text me-2"></i>View Details
-                      </button>
-                    </div>
-                  </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div v-if="application.portfolio_link" class="flex items-center">
+                  <strong class="mr-2">Portfolio:</strong>
+                  <a 
+                    :href="application.portfolio_link" 
+                    target="_blank" 
+                    class="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <span class="mr-1">🔗</span>
+                    View Portfolio
+                  </a>
+                </div>
+                <div v-if="application.proposed_price" class="flex items-center">
+                  <strong class="mr-2">Proposed Price:</strong>
+                  <span class="text-green-600 font-semibold">
+                    €{{ formatPrice(application.proposed_price) }}
+                  </span>
+                </div>
+                <div v-if="isBrand" class="flex items-center">
+                  <strong class="mr-2">Influencer:</strong>
+                  <span class="text-gray-700">{{ application.influencer_email }}</span>
+                </div>
+                <div class="flex items-center">
+                  <strong class="mr-2">Submitted:</strong>
+                  <span class="text-gray-700">{{ formatDate(application.created_at!) }}</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="lg:col-span-1 flex flex-col justify-center gap-3">
+              <button
+                class="px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+                @click="viewCampaign(application.campaign)"
+              >
+                <span class="mr-2">👁</span>View Campaign
+              </button>
+              
+              <button
+                v-if="!isBrand"
+                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                @click="viewApplication(application.id!)"
+              >
+                <span class="mr-2">📄</span>View Details
+              </button>
             </div>
           </div>
         </div>
@@ -167,15 +157,15 @@ const viewApplication = (applicationId: number) => {
 const getStatusBadgeClass = (status?: string): string => {
   switch (status) {
     case 'PENDING':
-      return 'bg-warning';
+      return 'bg-yellow-500 text-white';
     case 'SHORTLISTED':
-      return 'bg-info';
+      return 'bg-blue-500 text-white';
     case 'ACCEPTED':
-      return 'bg-success';
+      return 'bg-green-500 text-white';
     case 'REJECTED':
-      return 'bg-danger';
+      return 'bg-red-500 text-white';
     default:
-      return 'bg-secondary';
+      return 'bg-gray-500 text-white';
   }
 };
 
@@ -201,12 +191,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.application-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.application-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
+/* All styles now handled by Tailwind CSS */
 </style>

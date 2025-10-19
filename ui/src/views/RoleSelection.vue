@@ -1,66 +1,58 @@
 <template>
-  <div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient-primary p-3">
-    <div class="card shadow-lg" style="max-width: 900px; width: 100%;">
-      <div class="card-body p-4 p-md-5">
-        <h1 class="text-center mb-2 fw-bold">Choose Your Role</h1>
-        <p class="text-center text-muted mb-4">Select how you'd like to use Civana</p>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-primary p-4">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl">
+      <div class="p-6 md:p-8">
+        <h1 class="text-center text-3xl font-bold mb-2">Choose Your Role</h1>
+        <p class="text-center text-gray-500 mb-6">Select how you'd like to use Civana</p>
         
         <!-- Error Messages -->
-        <div v-if="error" class="alert alert-danger text-center" role="alert">
+        <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
           {{ error }}
         </div>
         
-        <div class="row g-3 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <!-- Brand Option -->
-          <div class="col-md-6">
-            <div
-              class="card h-100 cursor-pointer card-hover"
-              :class="{ 'border-primary border-2 bg-light': selectedRole === 'BRAND' }"
-              @click="selectRole('BRAND')"
-            >
-              <div class="card-body p-4">
-                <div class="text-center fs-1 mb-3">🏢</div>
-                <h2 class="text-center fs-5 fw-bold mb-3">Brand</h2>
-                <p class="text-center text-muted mb-3">
-                  Create UGC campaigns, collaborate with creators, and get authentic content for your brand.
-                </p>
-                <ul class="list-unstyled">
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Post campaign briefs</li>
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Review creator applications</li>
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Manage collaborations</li>
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Receive quality content</li>
-                </ul>
-              </div>
-            </div>
+          <div
+            class="bg-white border-2 rounded-lg p-6 cursor-pointer card-hover transition-all"
+            :class="selectedRole === 'BRAND' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+            @click="selectRole('BRAND')"
+          >
+            <div class="text-center text-5xl mb-4">🏢</div>
+            <h2 class="text-center text-xl font-bold mb-3">Brand</h2>
+            <p class="text-center text-gray-500 mb-4">
+              Create UGC campaigns, collaborate with creators, and get authentic content for your brand.
+            </p>
+            <ul class="space-y-2">
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Post campaign briefs</li>
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Review creator applications</li>
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Manage collaborations</li>
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Receive quality content</li>
+            </ul>
           </div>
           
           <!-- Influencer Option -->
-          <div class="col-md-6">
-            <div
-              class="card h-100 cursor-pointer card-hover"
-              :class="{ 'border-primary border-2 bg-light': selectedRole === 'INFLUENCER' }"
-              @click="selectRole('INFLUENCER')"
-            >
-              <div class="card-body p-4">
-                <div class="text-center fs-1 mb-3">✨</div>
-                <h2 class="text-center fs-5 fw-bold mb-3">Creator</h2>
-                <p class="text-center text-muted mb-3">
-                  Browse campaigns, apply with proposals, and get paid for creating authentic content.
-                </p>
-                <ul class="list-unstyled">
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Browse available campaigns</li>
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Submit applications</li>
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Collaborate with brands</li>
-                  <li class="mb-2 text-muted"><i class="text-primary">✓</i> Get paid for your work</li>
-                </ul>
-              </div>
-            </div>
+          <div
+            class="bg-white border-2 rounded-lg p-6 cursor-pointer card-hover transition-all"
+            :class="selectedRole === 'INFLUENCER' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+            @click="selectRole('INFLUENCER')"
+          >
+            <div class="text-center text-5xl mb-4">✨</div>
+            <h2 class="text-center text-xl font-bold mb-3">Creator</h2>
+            <p class="text-center text-gray-500 mb-4">
+              Browse campaigns, apply with proposals, and get paid for creating authentic content.
+            </p>
+            <ul class="space-y-2">
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Browse available campaigns</li>
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Submit applications</li>
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Collaborate with brands</li>
+              <li class="text-gray-600"><span class="text-blue-600 mr-2">✓</span>Get paid for your work</li>
+            </ul>
           </div>
         </div>
         
         <!-- Confirm Button -->
         <button
-          class="btn btn-primary w-100 py-2 fw-semibold"
+          class="w-full bg-gradient-primary text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
           :disabled="!selectedRole || loading"
           @click="handleConfirm"
         >
@@ -69,8 +61,8 @@
         </button>
         
         <!-- Logout Link -->
-        <div class="text-center mt-4">
-          <button @click="handleLogout" class="btn btn-link text-muted text-decoration-underline">Log out</button>
+        <div class="text-center mt-6">
+          <button @click="handleLogout" class="text-gray-500 hover:text-gray-700 underline">Log out</button>
         </div>
       </div>
     </div>
@@ -112,8 +104,5 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-/* Bootstrap classes are used, minimal custom styles needed */
-.cursor-pointer {
-  cursor: pointer;
-}
+/* All styles now handled by Tailwind CSS */
 </style>

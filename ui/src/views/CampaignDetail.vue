@@ -1,203 +1,201 @@
 <template>
-  <div class="container mt-5">
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
     <!-- Loading State -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-3">Loading campaign details...</p>
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-600">Loading campaign details...</p>
     </div>
 
     <!-- Error Message -->
-    <div v-else-if="errorMessage" class="alert alert-danger" role="alert">
+    <div v-else-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
       {{ errorMessage }}
-      <button class="btn btn-primary mt-3" @click="$router.push('/campaigns')">
+      <button class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity mt-3" @click="$router.push('/campaigns')">
         Back to Campaigns
       </button>
     </div>
 
     <!-- Campaign Details -->
     <div v-else-if="campaign">
-      <div class="row">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Campaign Info Column -->
-        <div class="col-lg-8">
-          <div class="card shadow-sm mb-4">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <h2 class="card-title">{{ campaign.title }}</h2>
-                <span
-                  class="badge"
-                  :class="getStatusBadgeClass(campaign.status)"
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex justify-between items-start mb-6">
+              <h2 class="text-2xl font-bold">{{ campaign.title }}</h2>
+              <span
+                class="ml-4 px-3 py-1 text-sm font-semibold rounded"
+                :class="getStatusBadgeClass(campaign.status)"
+              >
+                {{ campaign.status_display }}
+              </span>
+            </div>
+
+            <div class="mb-6">
+              <h5 class="text-lg font-semibold text-gray-600 mb-2">Description</h5>
+              <p class="text-lg text-gray-700">{{ campaign.description }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <span class="mr-2">🎥</span>
+                  <strong>Content Type:</strong>
+                </div>
+                <div class="mt-1 text-gray-700">{{ campaign.content_type_display }}</div>
+              </div>
+              <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <span class="mr-2 text-blue-600">🏷️</span>
+                  <strong>Category:</strong>
+                </div>
+                <div class="mt-1 text-gray-700">{{ campaign.category_display }}</div>
+              </div>
+              <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <span class="mr-2 text-green-600">💰</span>
+                  <strong>Budget:</strong>
+                </div>
+                <div class="mt-1 text-gray-700">€{{ formatBudget(campaign.budget) }}</div>
+              </div>
+              <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <span class="mr-2 text-yellow-600">📅</span>
+                  <strong>Deadline:</strong>
+                </div>
+                <div class="mt-1 text-gray-700">{{ formatDate(campaign.deadline) }}</div>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <h5 class="text-lg font-semibold text-gray-600 mb-2">Deliverables</h5>
+              <p class="whitespace-pre-line text-gray-700">{{ campaign.deliverables }}</p>
+            </div>
+
+            <div v-if="!isInfluencer" class="mb-6">
+              <h5 class="text-lg font-semibold text-gray-600 mb-2">Brand</h5>
+              <p class="flex items-center">
+                <span class="mr-2">🏢</span>{{ campaign.brand_email }}
+              </p>
+            </div>
+
+            <!-- Reference Files -->
+            <div v-if="campaign.reference_files && campaign.reference_files.length > 0" class="mb-6">
+              <h5 class="text-lg font-semibold text-gray-600 mb-2">Reference Materials</h5>
+              <div class="space-y-2">
+                <a
+                  v-for="file in campaign.reference_files"
+                  :key="file.id"
+                  :href="file.file"
+                  target="_blank"
+                  class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
                 >
-                  {{ campaign.status_display }}
-                </span>
-              </div>
-
-              <div class="mb-4">
-                <h5 class="text-muted">Description</h5>
-                <p class="lead">{{ campaign.description }}</p>
-              </div>
-
-              <div class="row mb-4">
-                <div class="col-md-6">
-                  <div class="detail-box p-3 mb-3 border rounded">
-                    <i class="bi bi-camera-video text-primary me-2"></i>
-                    <strong>Content Type:</strong>
-                    <div class="mt-1">{{ campaign.content_type_display }}</div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="detail-box p-3 mb-3 border rounded">
-                    <i class="bi bi-tag text-info me-2"></i>
-                    <strong>Category:</strong>
-                    <div class="mt-1">{{ campaign.category_display }}</div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="detail-box p-3 mb-3 border rounded">
-                    <i class="bi bi-currency-euro text-success me-2"></i>
-                    <strong>Budget:</strong>
-                    <div class="mt-1">€{{ formatBudget(campaign.budget) }}</div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="detail-box p-3 mb-3 border rounded">
-                    <i class="bi bi-calendar-event text-warning me-2"></i>
-                    <strong>Deadline:</strong>
-                    <div class="mt-1">{{ formatDate(campaign.deadline) }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mb-4">
-                <h5 class="text-muted">Deliverables</h5>
-                <p class="white-space-pre-line">{{ campaign.deliverables }}</p>
-              </div>
-
-              <div v-if="!isInfluencer" class="mb-3">
-                <h5 class="text-muted">Brand</h5>
-                <p><i class="bi bi-building me-2"></i>{{ campaign.brand_email }}</p>
-              </div>
-
-              <!-- Reference Files -->
-              <div v-if="campaign.reference_files && campaign.reference_files.length > 0" class="mb-4">
-                <h5 class="text-muted">Reference Materials</h5>
-                <div class="list-group">
-                  <a
-                    v-for="file in campaign.reference_files"
-                    :key="file.id"
-                    :href="file.file"
-                    target="_blank"
-                    class="list-group-item list-group-item-action"
-                  >
-                    <i class="bi bi-file-earmark me-2"></i>
+                  <span class="flex items-center">
+                    <span class="mr-2">📄</span>
                     {{ getFileName(file.file) }}
-                    <i class="bi bi-download float-end"></i>
-                  </a>
-                </div>
+                  </span>
+                  <span class="text-blue-600">⬇</span>
+                </a>
               </div>
+            </div>
 
-              <div class="mt-4">
-                <button class="btn btn-secondary" @click="$router.push('/campaigns')">
-                  <i class="bi bi-arrow-left me-2"></i>Back to Campaigns
-                </button>
-              </div>
+            <div class="mt-6">
+              <button class="bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors" @click="$router.push('/campaigns')">
+                <span class="mr-2">←</span>Back to Campaigns
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Application Form Column (for Influencers) -->
-        <div v-if="isInfluencer" class="col-lg-4">
-          <div class="card shadow-sm sticky-top" style="top: 20px;">
-            <div class="card-body">
-              <h4 class="card-title mb-4">Apply to Campaign</h4>
+        <div v-if="isInfluencer" class="lg:col-span-1">
+          <div class="bg-white rounded-lg shadow-sm p-6 sticky top-5">
+            <h4 class="text-xl font-bold mb-4">Apply to Campaign</h4>
 
-              <!-- Success Message -->
-              <div v-if="applicationSuccess" class="alert alert-success" role="alert">
-                <i class="bi bi-check-circle me-2"></i>
-                Application submitted successfully! You will receive a confirmation email shortly.
+            <!-- Success Message -->
+            <div v-if="applicationSuccess" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+              <span class="mr-2">✓</span>
+              Application submitted successfully! You will receive a confirmation email shortly.
+            </div>
+
+            <!-- Already Applied Message -->
+            <div v-else-if="alreadyApplied" class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+              <span class="mr-2">ℹ</span>
+              You have already applied to this campaign.
+            </div>
+
+            <!-- Application Form -->
+            <form v-else @submit.prevent="submitApplication">
+              <div class="mb-4">
+                <label for="pitch" class="block text-sm font-medium text-gray-700 mb-1">
+                  Your Pitch <span class="text-red-600">*</span>
+                </label>
+                <textarea
+                  id="pitch"
+                  v-model="applicationForm.pitch"
+                  class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="5"
+                  placeholder="Tell the brand why you're perfect for this campaign..."
+                  required
+                  :disabled="submitting"
+                ></textarea>
+                <p class="mt-1 text-sm text-gray-500">
+                  Describe your content style, audience, and why you're a great fit.
+                </p>
               </div>
 
-              <!-- Already Applied Message -->
-              <div v-else-if="alreadyApplied" class="alert alert-info" role="alert">
-                <i class="bi bi-info-circle me-2"></i>
-                You have already applied to this campaign.
+              <div class="mb-4">
+                <label for="portfolio_link" class="block text-sm font-medium text-gray-700 mb-1">
+                  Portfolio Link (Optional)
+                </label>
+                <input
+                  id="portfolio_link"
+                  v-model="applicationForm.portfolio_link"
+                  type="url"
+                  class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://instagram.com/yourprofile"
+                  :disabled="submitting"
+                />
+                <p class="mt-1 text-sm text-gray-500">
+                  Link to your social media profile or portfolio.
+                </p>
               </div>
 
-              <!-- Application Form -->
-              <form v-else @submit.prevent="submitApplication">
-                <div class="mb-3">
-                  <label for="pitch" class="form-label">
-                    Your Pitch <span class="text-danger">*</span>
-                  </label>
-                  <textarea
-                    id="pitch"
-                    v-model="applicationForm.pitch"
-                    class="form-control"
-                    rows="5"
-                    placeholder="Tell the brand why you're perfect for this campaign..."
-                    required
-                    :disabled="submitting"
-                  ></textarea>
-                  <div class="form-text">
-                    Describe your content style, audience, and why you're a great fit.
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="portfolio_link" class="form-label">
-                    Portfolio Link (Optional)
-                  </label>
+              <div class="mb-4">
+                <label for="proposed_price" class="block text-sm font-medium text-gray-700 mb-1">
+                  Proposed Price (Optional)
+                </label>
+                <div class="flex items-center border border-gray-300 rounded">
+                  <span class="px-3 text-gray-600 bg-gray-50">€</span>
                   <input
-                    id="portfolio_link"
-                    v-model="applicationForm.portfolio_link"
-                    type="url"
-                    class="form-control"
-                    placeholder="https://instagram.com/yourprofile"
+                    id="proposed_price"
+                    v-model="applicationForm.proposed_price"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    class="flex-1 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r"
+                    placeholder="220.00"
                     :disabled="submitting"
                   />
-                  <div class="form-text">
-                    Link to your social media profile or portfolio.
-                  </div>
                 </div>
+                <p class="mt-1 text-sm text-gray-500">
+                  Suggest your price if the budget is negotiable.
+                </p>
+              </div>
 
-                <div class="mb-3">
-                  <label for="proposed_price" class="form-label">
-                    Proposed Price (Optional)
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text">€</span>
-                    <input
-                      id="proposed_price"
-                      v-model="applicationForm.proposed_price"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      class="form-control"
-                      placeholder="220.00"
-                      :disabled="submitting"
-                    />
-                  </div>
-                  <div class="form-text">
-                    Suggest your price if the budget is negotiable.
-                  </div>
-                </div>
+              <!-- Error Message -->
+              <div v-if="applicationError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {{ applicationError }}
+              </div>
 
-                <!-- Error Message -->
-                <div v-if="applicationError" class="alert alert-danger" role="alert">
-                  {{ applicationError }}
-                </div>
-
-                <button
-                  type="submit"
-                  class="btn btn-primary w-100"
-                  :disabled="submitting || !applicationForm.pitch.trim()"
-                >
-                  <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ submitting ? 'Submitting...' : 'Submit Application' }}
-                </button>
-              </form>
-            </div>
+              <button
+                type="submit"
+                class="w-full bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                :disabled="submitting || !applicationForm.pitch.trim()"
+              >
+                <span v-if="submitting" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                {{ submitting ? 'Submitting...' : 'Submit Application' }}
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -316,13 +314,13 @@ const submitApplication = async () => {
 const getStatusBadgeClass = (status: string): string => {
   switch (status) {
     case 'LIVE':
-      return 'bg-success';
+      return 'bg-green-500 text-white';
     case 'DRAFT':
-      return 'bg-secondary';
+      return 'bg-gray-500 text-white';
     case 'CLOSED':
-      return 'bg-danger';
+      return 'bg-red-500 text-white';
     default:
-      return 'bg-secondary';
+      return 'bg-gray-500 text-white';
   }
 };
 
@@ -350,15 +348,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.detail-box {
-  background-color: #f8f9fa;
-}
-
-.sticky-top {
-  position: sticky;
-}
-
-.white-space-pre-line {
-  white-space: pre-line;
-}
+/* All styles now handled by Tailwind CSS */
 </style>
