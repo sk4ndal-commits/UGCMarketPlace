@@ -1,6 +1,22 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
+// Helper to load a role-specific view at runtime. Prefer brand view for 'BRAND', creator for 'CREATOR'/'INFLUENCER'.
+function loadRoleView(brandImportPath: string, creatorImportPath: string) {
+  return async () => {
+    // dynamic import inside function so we can access the auth store at runtime
+    const authStore = useAuthStore();
+    const role = authStore.user?.role;
+
+    if (role === 'BRAND') {
+      return (await import(/* @vite-ignore */ brandImportPath)).default;
+    }
+
+    // default to creator view for CREATOR/INFLUENCER
+    return (await import(/* @vite-ignore */ creatorImportPath)).default;
+  };
+}
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -47,7 +63,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/campaigns',
     name: 'CampaignList',
-    component: () => import('../views/CampaignList.vue'),
+    component: loadRoleView('../views/brand/CampaignList.vue', '../views/creator/CampaignList.vue'),
     meta: { requiresAuth: true, requiresRole: true },
   },
   {
@@ -65,7 +81,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/campaigns/:id',
     name: 'CampaignDetail',
-    component: () => import('../views/CampaignDetail.vue'),
+    component: loadRoleView('../views/brand/CampaignDetail.vue', '../views/creator/CampaignDetail.vue'),
     meta: { requiresAuth: true, requiresRole: true },
   },
   {

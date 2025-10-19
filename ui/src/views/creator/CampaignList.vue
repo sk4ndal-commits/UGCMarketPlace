@@ -1,18 +1,11 @@
 <template>
   <div class="container mx-auto px-4 py-6 max-w-7xl">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold">{{ isBrand ? 'My Campaigns' : 'Available Campaigns' }}</h2>
-      <button
-        v-if="isBrand"
-        class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
-        @click="$router.push('/campaigns/create')"
-      >
-        <span class="mr-2">➕</span>Create Campaign
-      </button>
+      <h2 class="text-2xl font-bold">Available Campaigns</h2>
     </div>
 
     <!-- Filters for Influencers -->
-    <div v-if="!isBrand" class="bg-white rounded-lg shadow-sm p-5 mb-6">
+    <div class="bg-white rounded-lg shadow-sm p-5 mb-6">
       <div class="flex justify-between items-center mb-4">
         <h5 class="text-lg font-semibold">
           <span class="mr-2">🔍</span>Filter Campaigns
@@ -108,47 +101,35 @@
       </div>
     </div>
 
-    <!-- Loading State -->
+    <!-- Loading/Error/Empty/Results handled like brand view but with isBrand=false -->
     <div v-if="loading" class="text-center py-12">
       <div class="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       <p class="mt-4 text-gray-600">Loading campaigns...</p>
     </div>
 
-    <!-- Error Message -->
     <div v-else-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
       {{ errorMessage }}
     </div>
 
-    <!-- Empty State -->
     <div v-else-if="campaigns.length === 0" class="text-center py-12">
       <div class="text-6xl text-gray-300 mb-4">📭</div>
       <h4 class="text-xl font-semibold mb-2">No campaigns found</h4>
-      <p class="text-gray-500 mb-4">
-        {{ isBrand ? 'Create your first campaign to get started!' : 'Check back later for new opportunities.' }}
-      </p>
-      <button
-        v-if="isBrand"
-        class="bg-gradient-primary text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
-        @click="$router.push('/campaigns/create')"
-      >
-        Create Campaign
-      </button>
+      <p class="text-gray-500 mb-4">Check back later for new opportunities.</p>
     </div>
 
-    <!-- Campaigns List -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <CampaignCard
         v-for="campaign in campaigns"
         :key="campaign.id"
         :campaign="campaign"
-        :isBrand="isBrand"
+        :isBrand="false"
         @view="viewCampaign"
         @edit="editCampaign"
         @delete="confirmDelete"
       />
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete modal same as brand -->
     <div
       v-if="showDeleteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -194,13 +175,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/authStore';
-import campaignService from '../services/campaignService';
-import type { Campaign, CampaignFilters } from '../models/campaign';
-import CampaignCard from './shared/CampaignCard.vue';
+import campaignService from '../../services/campaignService';
+import type { Campaign, CampaignFilters } from '../../models/campaign';
+import CampaignCard from '../shared/CampaignCard.vue';
 
 const router = useRouter();
-const authStore = useAuthStore();
+// authStore intentionally not used directly in script; kept for future role checks
+// const authStore = useAuthStore();
 
 const campaigns = ref<Campaign[]>([]);
 const loading = ref(true);
@@ -218,8 +199,6 @@ const filters = ref<CampaignFilters>({
   deadline_before: '',
 });
 
-const isBrand = computed(() => authStore.user?.role === 'BRAND');
-
 const categoryChoices = campaignService.getCategoryChoices();
 const contentTypeChoices = campaignService.getContentTypeChoices();
 
@@ -228,14 +207,14 @@ const loadCampaigns = async (applyFilters = false) => {
   errorMessage.value = '';
   try {
     const filterParams: CampaignFilters = {};
-    if (!isBrand.value && applyFilters) {
+    if (applyFilters) {
       if (filters.value.budget_min) filterParams.budget_min = Number(filters.value.budget_min);
       if (filters.value.budget_max) filterParams.budget_max = Number(filters.value.budget_max);
       if (filters.value.category) filterParams.category = filters.value.category;
       if (filters.value.content_type) filterParams.content_type = filters.value.content_type;
       if (filters.value.deadline_before) filterParams.deadline_before = filters.value.deadline_before;
     }
-    const response = await campaignService.getCampaigns(!isBrand.value && applyFilters ? filterParams : undefined);
+    const response = await campaignService.getCampaigns(applyFilters ? filterParams : undefined);
     campaigns.value = Array.isArray(response.data) ? response.data : [response.data];
   } catch (error: any) {
     console.error('Error loading campaigns:', error);
@@ -285,9 +264,7 @@ const confirmDelete = (campaign: Campaign) => {
 
 const deleteCampaign = async () => {
   if (!campaignToDelete.value?.id) return;
-  
   isDeleting.value = true;
-  
   try {
     await campaignService.deleteCampaign(campaignToDelete.value.id);
     campaigns.value = campaigns.value.filter(c => c.id !== campaignToDelete.value?.id);
@@ -301,13 +278,29 @@ const deleteCampaign = async () => {
   }
 };
 
-// helpers moved to CampaignCard component
-
 onMounted(() => {
   loadCampaigns();
 });
+
+// No-op references to satisfy TypeScript usage checks when template usage isn't picked up
+// (template uses these symbols; referencing them here prevents TS6133 errors)
+void CampaignCard;
+void categoryChoices;
+void contentTypeChoices;
+void hasActiveFilters;
+void applyFilters;
+void clearFilters;
+void viewCampaign;
+void editCampaign;
+void confirmDelete;
+void deleteCampaign;
 </script>
 
 <style scoped>
-/* All styles now handled by Tailwind CSS */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 </style>
+
+
+*** End Patch

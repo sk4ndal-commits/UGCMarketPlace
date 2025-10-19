@@ -120,18 +120,7 @@
 
           <!-- Actions (for creators who own the application) -->
           <div v-if="canEdit" class="flex gap-3 mt-6">
-            <button
-              @click="editApplication"
-              class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-            >
-              Edit Application
-            </button>
-            <button
-              @click="confirmDelete"
-              class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              Delete Application
-            </button>
+            <ApplicationActions @edit="editApplication" @delete="confirmDelete" />
           </div>
         </div>
       </div>
@@ -172,6 +161,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import applicationService from '../services/applicationService';
+import ApplicationActions from './creator/ApplicationActions.vue';
 import type { CreatorApplication } from '../models/application';
 
 const router = useRouter();

@@ -71,7 +71,7 @@
               <p class="whitespace-pre-line text-gray-700">{{ campaign.deliverables }}</p>
             </div>
 
-            <div v-if="!isInfluencer" class="mb-6">
+            <div class="mb-6">
               <h5 class="text-lg font-semibold text-gray-600 mb-2">Brand</h5>
               <p class="flex items-center">
                 <span class="mr-2">🏢</span>{{ campaign.brand_email }}
@@ -106,8 +106,8 @@
           </div>
         </div>
 
-        <!-- Application Form Column (for Influencers) -->
-        <div v-if="isInfluencer" class="lg:col-span-1">
+        <!-- Application Form Column (for creators/influencers) -->
+        <div class="lg:col-span-1">
           <CampaignApplyForm :campaignId="campaign?.id || 0" />
         </div>
       </div>
@@ -116,52 +116,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/authStore';
-import campaignService from '../services/campaignService';
-import CampaignApplyForm from './creator/CampaignApplyForm.vue';
-import type { Campaign } from '../models/campaign';
+import campaignService from '../../services/campaignService';
+import CampaignApplyForm from './CampaignApplyForm.vue';
+import type { Campaign } from '../../models/campaign';
 
 const route = useRoute();
-const authStore = useAuthStore();
+// router and authStore not needed in creator detail currently
+// const router = useRouter();
+// const authStore = useAuthStore();
 
 const campaign = ref<Campaign | null>(null);
 const loading = ref(true);
 const errorMessage = ref('');
 
-const isInfluencer = computed(() => authStore.user?.role === 'INFLUENCER');
-
 const loadCampaign = async () => {
   loading.value = true;
   errorMessage.value = '';
-  
   try {
-  const campaignId = parseInt(route.params.id as string);
-  const response = await campaignService.getCampaign(campaignId);
-  campaign.value = response.data as Campaign;
-    
-    // Creator/applicant interactions are handled by the CampaignApplyForm component
+    const campaignId = parseInt(route.params.id as string);
+    const response = await campaignService.getCampaign(campaignId);
+    campaign.value = response.data as Campaign;
   } catch (error: any) {
     console.error('Error loading campaign:', error);
     errorMessage.value = 'Failed to load campaign details. Please try again later.';
   } finally {
     loading.value = false;
-  }
-};
-
-// application interactions moved into CampaignApplyForm component
-
-const getStatusBadgeClass = (status: string): string => {
-  switch (status) {
-    case 'LIVE':
-      return 'bg-green-500 text-white';
-    case 'DRAFT':
-      return 'bg-gray-500 text-white';
-    case 'CLOSED':
-      return 'bg-red-500 text-white';
-    default:
-      return 'bg-gray-500 text-white';
   }
 };
 
@@ -179,6 +160,19 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+const getStatusBadgeClass = (status: string): string => {
+  switch (status) {
+    case 'LIVE':
+      return 'bg-green-500 text-white';
+    case 'DRAFT':
+      return 'bg-gray-500 text-white';
+    case 'CLOSED':
+      return 'bg-red-500 text-white';
+    default:
+      return 'bg-gray-500 text-white';
+  }
+};
+
 const getFileName = (filePath: string): string => {
   return filePath.split('/').pop() || filePath;
 };
@@ -186,8 +180,14 @@ const getFileName = (filePath: string): string => {
 onMounted(() => {
   loadCampaign();
 });
+
+// no-op to avoid unused-variable TS errors if tools are stricter
+void getStatusBadgeClass;
+void getFileName;
 </script>
 
 <style scoped>
 /* All styles now handled by Tailwind CSS */
 </style>
+
+*** End Patch

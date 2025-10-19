@@ -9,9 +9,7 @@ export interface CreatorApplication {
   visibility: string;
   template?: number;
   template_details?: Template;
-  // Some views expect a derived template_name and creator_email fields
-  template_name?: string;
-  creator_email?: string;
+  // Use canonical fields only. Views should use template_details?.name and creator (id)
   parameters?: Record<string, any>;
   git_integration?: {
     repository_url?: string;
